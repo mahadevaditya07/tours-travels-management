@@ -1,0 +1,1 @@
+const r=require('express').Router(),c=require('../controllers/tourController'),{protect,adminOnly}=require('../middleware/authMiddleware');r.get('/',c.getTours);r.get('/:id',c.getTourById);r.post('/',protect,adminOnly,c.createTour);r.put('/:id',protect,adminOnly,c.updateTour);r.delete('/:id',protect,adminOnly,c.deleteTour);module.exports=r;
