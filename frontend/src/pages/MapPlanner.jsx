@@ -15,19 +15,22 @@ L.Icon.Default.mergeOptions({
 export default function MapPlanner() {
   const location = useLocation();
   const passedTour = location.state?.tour;
-  const [start, setStart] = useState("Hubli");
-  const [destination, setDestination] = useState(passedTour?.destination?.split(",")[0] || "Gokarna");
+  const [start, setStart] = useState(null);
+  const [destination, setDestination] = useState(passedTour?.destination?.split(",")[0] || null);
   const [stops, setStops] = useState([]);
   const [newStopName, setNewStopName] = useState("");
   const [members, setMembers] = useState(2);
   const [vehicleId, setVehicleId] = useState("suv");
+  const [clickMode, setClickMode] = useState('addStop'); // 'addStop' | 'setStart' | 'setDestination'
 
-  const routeNames = [start, ...stops.map(s => s.name), destination];
+  const displayName = (v, fallback) => (typeof v === 'string' ? v : v?.name || fallback || '—');
+  const routeNames = [displayName(start, 'Start'), ...stops.map(s => s.name), displayName(destination, 'Destination')];
   const route = useMemo(() => buildRoutePoints(start, destination, stops), [start, destination, stops]);
   const totalDistance = useMemo(() => getRouteDistance(route), [route]);
   const vehicle = vehicles.find(v => v.id === vehicleId);
   const fuelCost = totalDistance ? Math.ceil(totalDistance / vehicle.mileage) * 100 : 0;
-  const nearby = attractions[destination] || attractions.Gokarna || [];
+  const destKey = typeof destination === 'string' ? destination : (passedTour?.destination?.split(",")[0] || 'Gokarna');
+  const nearby = attractions[destKey] || attractions.Gokarna || [];
 
   const addStop = (place) => {
     const nextStop = typeof place === "string"
@@ -46,10 +49,23 @@ export default function MapPlanner() {
   function ClickHandler() {
     useMapEvents({
       click(e) {
+        const lat = e.latlng.lat, lng = e.latlng.lng;
+        if (clickMode === 'setStart') {
+          const name = window.prompt('Name this start location (optional)');
+          const id = `start-${Date.now()}`;
+          setStart({ id, name: name || `Start ${lat.toFixed(3)},${lng.toFixed(3)}`, coords: [lat, lng] });
+          return;
+        }
+        if (clickMode === 'setDestination') {
+          const name = window.prompt('Name this destination (optional)');
+          const id = `dest-${Date.now()}`;
+          setDestination({ id, name: name || `Destination ${lat.toFixed(3)},${lng.toFixed(3)}`, coords: [lat, lng] });
+          return;
+        }
+        // default: add stop
         const name = window.prompt('Enter a name for this stop (leave blank to cancel)');
         if (!name) return;
         const id = `custom-${Date.now()}`;
-        const lat = e.latlng.lat, lng = e.latlng.lng;
         const place = { id, name, coords: [lat, lng] };
         addStop(place);
       }
@@ -61,9 +77,14 @@ export default function MapPlanner() {
     <div className="container planner-grid">
       <aside className="planner-controls card">
         <div className="planner-step"><span>01</span><div><h3>Route</h3><div className="form-grid">
-          <div className="field"><label>Starting location</label><select value={start} onChange={e=>setStart(e.target.value)}>{Object.keys(locations).map(x=><option key={x}>{x}</option>)}</select></div>
-          <div className="field"><label>Destination</label><select value={destination} onChange={e=>setDestination(e.target.value)}>{Object.keys(locations).map(x=><option key={x}>{x}</option>)}</select></div>
-        </div></div></div>
+          <div className="field"><label>Starting location</label><input type="text" value={typeof start === 'string' ? start : (start?.name || '')} onChange={e=>setStart(e.target.value || null)} placeholder="Type a place or click map to set"/></div>
+          <div className="field"><label>Destination</label><input type="text" value={typeof destination === 'string' ? destination : (destination?.name || '')} onChange={e=>setDestination(e.target.value || null)} placeholder="Type a place or click map to set"/></div>
+        </div>
+        <div style={{marginTop:12}} className="form-grid"><div className="field"><label>Map click mode</label><div style={{display:'flex',gap:8}}>
+          <button className={`btn ${clickMode==='addStop'?'btn-primary':''}`} onClick={() => setClickMode('addStop')}>Add stop</button>
+          <button className={`btn ${clickMode==='setStart'?'btn-primary':''}`} onClick={() => setClickMode('setStart')}>Set start</button>
+          <button className={`btn ${clickMode==='setDestination'?'btn-primary':''}`} onClick={() => setClickMode('setDestination')}>Set destination</button>
+        </div></div></div></div></div>
         <div className="planner-step"><span>02</span><div><h3>Stops</h3><div className="field stop-input-group"><label>Add a place or stop name</label><div className="stop-input-row"><input type="text" value={newStopName} onChange={e => setNewStopName(e.target.value)} placeholder="e.g. Om Beach / Yana Caves" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addStop(newStopName); } }}/><button type="button" className="btn btn-secondary" onClick={() => addStop(newStopName)}>Add</button></div></div><div className="stop-list">{stops.length ? stops.map((s, idx) => {
             const item = typeof s === 'string' ? { id: s, name: s } : s;
             return (
@@ -99,14 +120,14 @@ export default function MapPlanner() {
         <Link className={`btn btn-primary full ${members > vehicle.capacity ? "disabled" : ""}`} to={members <= vehicle.capacity ? "/booking" : "#"} state={{planner:{start,destination,stops,members,vehicleId,distance:Math.round(totalDistance),fuelCost},tour:passedTour}}>Continue to booking →</Link>
       </aside>
       <section className="map-area">
-        <div className="map-card card"><MapContainer center={route[0] || locations.Hubli} zoom={7} scrollWheelZoom className="map"><TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <div className="map-card card"><MapContainer center={route[0] || locations.Hubli} zoom={7} scrollWheelZoom className="map"><TileLayer attribution='&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community' url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
             <ClickHandler />
             {route.map((point,i)=>(<Marker position={point} key={`${point[0]}-${point[1]}-${i}`}><Popup>{routeNames[i]}</Popup></Marker>))}
             {/* Show custom stops with coords */}
             {stops.map(s => s.coords ? <Marker position={s.coords} key={s.id}><Popup><div><strong>{s.name}</strong><div><button onClick={() => addStop(s)}>Add stop</button></div></div></Popup></Marker> : null)}
             {/* Nearby attractions markers (approximate positions around destination) */}
             {nearby.map((place, idx) => {
-              const destCoord = locations[destination] || locations.Gokarna;
+              const destCoord = (typeof destination === 'string' ? locations[destination] : destination?.coords) || locations.Gokarna;
               // approximate offset in degrees (~ distance/111 km)
               const offset = (place.distance || 2) / 111;
               const angle = (idx / nearby.length) * Math.PI * 2;

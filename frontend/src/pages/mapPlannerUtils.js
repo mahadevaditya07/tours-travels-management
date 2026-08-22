@@ -26,8 +26,14 @@ export const normalizeStop = (stop) => {
 };
 
 export const inferCoordsFromRoute = (name, index, totalStops, start, destination) => {
-  const startCoord = locations[start] || [15.3647, 75.124];
-  const destinationCoord = locations[destination] || [14.5479, 74.3188];
+  const resolveCoord = (v, fallback) => {
+    if (!v) return fallback;
+    if (Array.isArray(v)) return v;
+    if (typeof v === 'object' && v.coords) return v.coords;
+    return locations[v] || fallback;
+  };
+  const startCoord = resolveCoord(start, [15.3647, 75.124]);
+  const destinationCoord = resolveCoord(destination, [14.5479, 74.3188]);
   const baseOffset = totalStops === 0 ? 0.09 : 0.12 + (index + 1) * 0.025;
   const ratio = (index + 1) / (totalStops + 2);
   const lat = startCoord[0] + (destinationCoord[0] - startCoord[0]) * ratio + (index % 2 === 0 ? 1 : -1) * baseOffset;
@@ -48,8 +54,14 @@ export const ensureStop = (place, index, routeContext = {}) => {
 };
 
 export const buildRoutePoints = (start, destination, stops = []) => {
-  const startPoint = locations[start] || [15.3647, 75.124];
-  const destinationPoint = locations[destination] || [14.5479, 74.3188];
+  const resolveCoord = (v, fallback) => {
+    if (!v) return fallback;
+    if (Array.isArray(v)) return v;
+    if (typeof v === 'object' && v.coords) return v.coords;
+    return locations[v] || fallback;
+  };
+  const startPoint = resolveCoord(start, [15.3647, 75.124]);
+  const destinationPoint = resolveCoord(destination, [14.5479, 74.3188]);
   const route = [startPoint];
 
   const normalizedStops = (stops || []).map((stop, index) => {
