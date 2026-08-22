@@ -9,22 +9,25 @@ export default function Booking() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const planner = location.state?.planner || { start:"Hubli", destination:"Gokarna", stops:[], members:2, vehicleId:"suv", distance:210, fuelCost:1500 };
-  const tour = location.state?.tour || tours[0];
+  const tour = location.state?.tour || null;
   const vehicle = vehicles.find(v=>v.id===planner.vehicleId) || vehicles[1];
-  const [date,setDate] = useState(tour.dates?.[0] || "");
+  const routeStart = typeof planner.start === "string" ? planner.start : planner.start?.name || "Hubli";
+  const routeDestination = typeof planner.destination === "string" ? planner.destination : planner.destination?.name || "Gokarna";
+  const routeStops = Array.isArray(planner.stops) ? planner.stops : [];
+  const [date,setDate] = useState(tour?.dates?.[0] || "");
   const [traveler,setTraveler] = useState({ name:user?.name || "", email:user?.email || "", phone:user?.phone || "" });
   const [error,setError] = useState(""); const [saving,setSaving] = useState(false);
 
-  const vehicleCost = planner.distance * vehicle.costPerKm;
+  const vehicleCost = Number(planner.distance || 0) * vehicle.costPerKm;
   const additional = 500;
-  const total = tour.price * planner.members + vehicleCost + additional;
+  const total = (tour?.price || 0) * Number(planner.members || 1) + vehicleCost + additional;
 
   const submit = async e => {
     e.preventDefault(); setError("");
-    if (planner.members > vehicle.capacity) return setError("Selected vehicle cannot accommodate all travelers.");
+    if (Number(planner.members || 1) > vehicle.capacity) return setError("Selected vehicle cannot accommodate all travelers.");
     setSaving(true);
     try {
-      const booking = await createBooking({ traveler, tourId:tour.id, tour:tour.title, start:planner.start, destination:planner.destination, stops:planner.stops, date, members:planner.members, vehicle:vehicle.name, distance:planner.distance, basePrice:tour.price * planner.members, vehicleCost, additional, total });
+      const booking = await createBooking({ traveler, tourId: tour?.id || null, tour: tour?.title || "Custom trip", start:routeStart, destination:routeDestination, stops:routeStops, date, members:Number(planner.members || 1), vehicle:vehicle.name, distance:Number(planner.distance || 0), basePrice:(tour?.price || 0) * Number(planner.members || 1), vehicleCost, additional, total });
       navigate("/my-bookings", { state:{success:`Booking ${booking.id} confirmed successfully.`} });
     } catch { setError("Booking failed. Please try again."); } finally { setSaving(false); }
   };
@@ -35,10 +38,25 @@ export default function Booking() {
         <div className="field"><label>Name</label><input required value={traveler.name} onChange={e=>setTraveler({...traveler,name:e.target.value})}/></div>
         <div className="field"><label>Email</label><input required type="email" value={traveler.email} onChange={e=>setTraveler({...traveler,email:e.target.value})}/></div>
         <div className="field"><label>Phone</label><input required value={traveler.phone} onChange={e=>setTraveler({...traveler,phone:e.target.value})}/></div>
-        <div className="field"><label>Travel date</label><select required value={date} onChange={e=>setDate(e.target.value)}>{tour.dates.map(d=><option key={d} value={d}>{new Date(d).toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})}</option>)}</select></div>
-      </div><h2>Trip information</h2><div className="trip-summary"><div><span>Tour</span><strong>{tour.title}</strong></div><div><span>Route</span><strong>{planner.start} → {planner.destination}</strong></div><div><span>Stops</span><strong>{planner.stops.length ? planner.stops.map(s=>s.name).join(", ") : "No extra stops"}</strong></div><div><span>Travelers</span><strong>{planner.members}</strong></div><div><span>Vehicle</span><strong>{vehicle.name}</strong></div><div><span>Distance</span><strong>{planner.distance} km</strong></div></div>
-      <button className="btn btn-primary full" disabled={saving}>{saving ? "Confirming booking..." : "Confirm booking →"}</button><p className="muted tiny">By confirming, this frontend creates a development booking. Final pricing and availability should be verified by the backend.</p>
+        <div className="field"><label>Travel date</label>{tour ? <select required value={date} onChange={e=>setDate(e.target.value)}>{(tour.dates || []).map(d=><option key={d} value={d}>{new Date(d).toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})}</option>)}</select> : <input required type="date" value={date} onChange={e=>setDate(e.target.value)} />}</div>
+      </div>
+      <h2>Trip information</h2>
+      <div className="trip-summary">
+        <div><span>Tour</span><strong>{tour?.title || "Custom trip"}</strong></div>
+        <div><span>Route</span><strong>{routeStart} → {routeDestination}</strong></div>
+        <div><span>Stops</span><strong>{routeStops.length ? routeStops.map(s=>typeof s === "string" ? s : s.name).join(", ") : "No extra stops"}</strong></div>
+        <div><span>Travelers</span><strong>{planner.members || 1}</strong></div>
+        <div><span>Vehicle</span><strong>{vehicle.name}</strong></div>
+        <div><span>Distance</span><strong>{Number(planner.distance || 0)} km</strong></div>
+      </div>
+      <button className="btn btn-primary full" disabled={saving}>{saving ? "Confirming booking..." : "Confirm booking →"}</button>
+      <p className="muted tiny">By confirming, this frontend creates a development booking. Final pricing and availability should be verified by the backend.</p>
     </form>
-    <aside className="price-card card"><img src={tour.image} alt={tour.title}/><div className="price-content"><span className="eyebrow">Estimated total</span><h2>₹{total.toLocaleString("en-IN")}</h2><div className="price-lines"><div><span>Base tour</span><strong>₹{(tour.price*planner.members).toLocaleString("en-IN")}</strong></div><div><span>Vehicle</span><strong>₹{vehicleCost.toLocaleString("en-IN")}</strong></div><div><span>Additional charges</span><strong>₹{additional.toLocaleString("en-IN")}</strong></div></div><div className="price-total"><span>Total estimate</span><strong>₹{total.toLocaleString("en-IN")}</strong></div><Link className="btn btn-secondary full" to="/map-planner">← Edit route</Link></div></aside></div>
+    {tour ? (
+      <aside className="price-card card"><img src={tour.image} alt={tour.title}/><div className="price-content"><span className="eyebrow">Estimated total</span><h2>₹{total.toLocaleString("en-IN")}</h2><div className="price-lines"><div><span>Base tour</span><strong>₹{((tour.price||0)*planner.members).toLocaleString("en-IN")}</strong></div><div><span>Vehicle</span><strong>₹{vehicleCost.toLocaleString("en-IN")}</strong></div><div><span>Additional charges</span><strong>₹{additional.toLocaleString("en-IN")}</strong></div></div><div className="price-total"><span>Total estimate</span><strong>₹{total.toLocaleString("en-IN")}</strong></div><Link className="btn btn-secondary full" to="/map-planner">← Edit route</Link></div></aside>
+    ) : (
+      <aside className="price-card card"><div className="price-content"><span className="eyebrow">Estimated total</span><h2>₹{total.toLocaleString("en-IN")}</h2><div className="price-lines"><div><span>Base tour</span><strong>₹{0}</strong></div><div><span>Vehicle</span><strong>₹{vehicleCost.toLocaleString("en-IN")}</strong></div><div><span>Additional charges</span><strong>₹{additional.toLocaleString("en-IN")}</strong></div></div><div className="price-total"><span>Total estimate</span><strong>₹{total.toLocaleString("en-IN")}</strong></div><Link className="btn btn-secondary full" to="/map-planner">← Edit route</Link></div></aside>
+    )}
+    </div>
   </div>;
 }
