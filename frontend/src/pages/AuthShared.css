@@ -1,0 +1,25 @@
+/* Shared auth styles (moved from App.css) — used by login & register */
+.auth-page { min-height:calc(100vh - 78px); display:grid; grid-template-columns:1fr 1fr; }
+.auth-art { padding:100px clamp(30px,7vw,100px); display:flex; flex-direction:column; justify-content:center; background:linear-gradient(135deg,#0a2232,#08111f); position:relative; overflow:hidden; }
+.auth-art:after { content:""; width:500px; height:500px; border-radius:50%; background:rgba(35,196,168,.09); position:absolute; right:-250px; bottom:-250px; filter:blur(20px); }
+.auth-art p { color:var(--muted); max-width:450px; line-height:1.8; }
+.auth-panel { display:flex; align-items:center; justify-content:center; padding:50px; background:#08121f; }
+.auth-form { width:min(470px,100%); display:grid; gap:18px; }
+.auth-form h2 { font-size:2.1rem; margin:0; }
+.auth-form form { display:grid; gap:16px; margin-top:8px; }
+.password-wrap { position:relative; }
+.password-wrap input { padding-right:65px; }
+.password-wrap button { position:absolute; right:10px; top:50%; transform:translateY(-50%); color:var(--primary-2); background:transparent; font-size:.75rem; }
+.form-row { display:flex; justify-content:space-between; gap:12px; align-items:center; font-size:.78rem; }
+.remember { color:var(--muted); display:flex; align-items:center; gap:7px; }
+.link-button { background:transparent; color:var(--primary-2); }
+.full { width:100%; }
+.full-field { grid-column:1/-1; }
+.auth-switch { color:var(--muted); text-align:center; font-size:.86rem; }
+.auth-switch a { color:var(--primary-2); font-weight:700; }
+
+@media (max-width: 720px) {
+  .auth-page { grid-template-columns:1fr; }
+  .auth-art { min-height:280px; padding:55px 25px; }
+  .auth-panel { padding:35px 18px; }
+}

@@ -1,1 +1,3 @@
-/* Auth styles are included in App.css for this generated starter. */
+@import './AuthShared.css';
+
+/* Page-specific overrides for Login (if needed) */

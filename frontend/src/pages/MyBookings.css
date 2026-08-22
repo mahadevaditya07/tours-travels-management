@@ -1,1 +1,17 @@
+/* MyBookings styles moved from App.css */
+.booking-list { display:grid; gap:14px; }
+.booking-item { padding:20px; display:grid; grid-template-columns:110px 1.5fr 1fr auto auto; gap:20px; align-items:center; }
+.booking-item h2 { margin:5px 0; font-size:1.05rem; }
+.booking-item p { margin:0; font-size:.76rem; }
+.booking-id span,.booking-info span { display:block; color:var(--muted); font-size:.68rem; }
+.booking-id strong { color:var(--primary-2); font-size:.8rem; }
+.booking-info { display:grid; gap:5px; }
+.booking-info strong { margin-top:4px; }
+.status { padding:7px 9px; border-radius:9px; font-size:.68rem; text-transform:capitalize; background:rgba(35,196,168,.09); color:#9ceee2; }
+.status.cancelled { color:#ff9da8; background:rgba(255,107,122,.09); }
+.booking-actions { display:flex; gap:7px; }
+
+@media (max-width: 950px) {
+  .booking-item { grid-template-columns:1fr 1fr; }
+}
 /* Booking history styles are included in App.css for this generated starter. */

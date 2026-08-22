@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import DestinationCard from "../components/DestinationCard";
 import TourCard from "../components/TourCard";
 import { destinations, tours } from "../data/mockData";
+import "./Home.css";
 
 export default function Home() {
   return (

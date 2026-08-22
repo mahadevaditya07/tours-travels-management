@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { tours } from "../data/mockData";
+import "./TourDetails.css";
 
 export default function TourDetails() {
   const { id } = useParams();

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import "./Login.css";
 
 export default function Login() {
   const { login, loading } = useAuth();
@@ -9,6 +10,8 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
+  
+  
 
   const submit = async e => {
     e.preventDefault(); setError("");

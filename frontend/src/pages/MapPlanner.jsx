@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-
 import L from "leaflet";
 import { attractions, locations, vehicles } from "../data/mockData";
 import { buildRoutePoints, ensureStop, getRouteDistance } from "./mapPlannerUtils";
+import "./MapPlanner.css";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cancelBooking, getMyBookings } from "../services/api";
+import "./MyBookings.css";
 import Loading from "../components/Loading";
 
 export default function MyBookings() {

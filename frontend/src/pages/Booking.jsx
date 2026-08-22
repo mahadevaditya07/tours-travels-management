@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { createBooking } from "../services/api";
 import { tours, vehicles } from "../data/mockData";
+import "./Booking.css";
 
 export default function Booking() {
   const location = useLocation();

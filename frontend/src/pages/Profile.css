@@ -1,1 +1,11 @@
+/* Profile page styles moved from App.css */
+.profile-grid { display:grid; grid-template-columns:280px 1fr; gap:24px; }
+.profile-card { padding:28px; text-align:center; height:max-content; }
+.profile-card h2 { margin:0; }
+.profile-badge { display:inline-block; color:var(--primary-2); background:rgba(35,196,168,.08); border:1px solid rgba(35,196,168,.12); border-radius:20px; padding:7px 10px; font-size:.7rem; margin:14px 0 22px; }
+.profile-form { padding:28px; display:grid; gap:20px; }
+
+@media (max-width: 950px) {
+  .profile-grid { grid-template-columns:1fr; }
+}
 /* Profile styles are included in App.css for this generated starter. */

@@ -1,1 +1,15 @@
-/* Navbar styles live in App.css for this compact starter. */
+/* Navbar styles moved from App.css */
+.navbar { position:sticky; top:0; z-index:1000; background:rgba(7,17,31,.78); backdrop-filter:blur(18px); border-bottom:1px solid var(--border); }
+.nav-inner { width:min(1180px,calc(100% - 40px)); margin:auto; min-height:78px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+.brand { display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.03em; font-size:1.15rem; }
+.brand-mark { width:35px; height:35px; display:grid; place-items:center; border-radius:11px; background:linear-gradient(135deg,var(--primary-2),var(--primary)); color:#061310; font-weight:900; }
+.nav-links { display:flex; align-items:center; gap:24px; }
+.nav-links > a { color:#aab8c9; font-size:.9rem; transition:.2s; }
+.nav-links > a:hover,.nav-links > a.active { color:white; }
+.nav-links > a.active { position:relative; }
+.nav-links > a.active:after { content:""; position:absolute; left:0; right:0; bottom:-28px; height:2px; background:var(--primary); }
+.nav-auth { display:flex; align-items:center; gap:18px; }
+.nav-auth > a:first-child { color:#aab8c9; }
+.nav-cta { padding:10px 15px; }
+.nav-user { background:transparent; color:#aab8c9; padding:0; }
+.mobile-toggle { display:none; background:transparent; color:white; font-size:1.35rem; }

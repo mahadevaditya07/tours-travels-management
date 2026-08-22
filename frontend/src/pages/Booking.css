@@ -1,1 +1,25 @@
+/* Booking styles moved from App.css */
+.booking-layout { display:grid; grid-template-columns:1fr 350px; gap:24px; }
+.booking-form { padding:28px; display:grid; gap:20px; }
+.booking-form h2 { margin:0; font-size:1.2rem; }
+.trip-summary { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.trip-summary div { padding:13px; background:rgba(255,255,255,.03); border-radius:12px; }
+.trip-summary span,.trip-summary strong { display:block; }
+.trip-summary span { color:var(--muted); font-size:.68rem; margin-bottom:4px; }
+.trip-summary strong { font-size:.85rem; }
+.tiny { font-size:.68rem; }
+.price-card { overflow:hidden; height:max-content; position:sticky; top:100px; }
+.price-card > img { width:100%; height:190px; object-fit:cover; }
+.price-content { padding:22px; }
+.price-content h2 { font-size:2.3rem; margin:10px 0 22px; }
+.price-lines { display:grid; gap:11px; padding-bottom:17px; border-bottom:1px solid var(--border); }
+.price-lines div,.price-total { display:flex; justify-content:space-between; gap:15px; }
+.price-lines span,.price-total span { color:var(--muted); font-size:.8rem; }
+.price-lines strong { font-size:.82rem; }
+.price-total { padding:17px 0; }
+.price-total strong { color:var(--primary-2); font-size:1.15rem; }
+
+@media (max-width: 950px) {
+  .booking-layout { grid-template-columns:1fr; }
+}
 /* Booking styles are included in App.css for this generated starter. */

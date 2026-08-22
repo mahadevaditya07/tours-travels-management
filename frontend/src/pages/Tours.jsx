@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import "./Tours.css";
 import TourCard from "../components/TourCard";
 import SearchBar from "../components/SearchBar";
 import { tours } from "../data/mockData";

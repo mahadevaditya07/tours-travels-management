@@ -1,1 +1,35 @@
+/* Dashboard styles moved from App.css */
+.page { padding-bottom:90px; }
+.dashboard-grid { display:grid; grid-template-columns:1fr 320px; gap:24px; }
+.dashboard-main { display:grid; gap:24px; }
+.stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.stat-card-lg { padding:20px; }
+.stat-card-lg span,.stat-card-lg small { display:block; color:var(--muted); font-size:.75rem; }
+.stat-card-lg strong { display:block; font-size:2rem; margin:9px 0; color:var(--primary-2); }
+.dash-panel { padding:25px; }
+.dash-panel h2 { margin:5px 0 0; }
+.quick-actions { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.quick-card { padding:18px; border:1px solid var(--border); background:rgba(255,255,255,.025); border-radius:16px; transition:.25s; }
+.quick-card:hover { transform:translateY(-3px); background:rgba(255,255,255,.05); }
+.quick-card span { font-size:1.5rem; color:var(--primary-2); display:block; }
+.quick-card strong,.quick-card small { display:block; }
+.quick-card small { color:var(--muted); font-size:.75rem; margin-top:5px; }
+.dashboard-side { padding:25px; height:max-content; }
+.avatar { width:62px; height:62px; border-radius:20px; display:grid; place-items:center; background:linear-gradient(135deg,var(--primary),#227c9d); color:#04110f; font-size:1.5rem; font-weight:900; margin:18px 0 12px; }
+.avatar.xl { width:100px; height:100px; border-radius:30px; font-size:2.5rem; margin:0 auto 18px; }
+.dashboard-side h2 { margin:0; }
+.side-destination { margin-top:25px; border-top:1px solid var(--border); padding-top:20px; }
+.side-destination img { height:150px; width:100%; object-fit:cover; border-radius:16px; margin:12px 0; }
+.side-destination strong,.side-destination span:last-child { display:block; }
+.side-destination span:last-child { color:var(--muted); font-size:.78rem; margin-top:4px; }
+.mini-tour { display:grid; grid-template-columns:130px 1fr; overflow:hidden; }
+.mini-tour img { width:100%; height:100%; min-height:150px; object-fit:cover; }
+.mini-tour div { padding:15px; }
+.mini-tour span { color:var(--primary-2); font-size:.7rem; }
+.mini-tour h3 { margin:6px 0 12px; font-size:1rem; }
+.mini-tour strong { color:var(--primary-2); }
+
+@media (max-width: 950px) {
+  .dashboard-grid { grid-template-columns:1fr; }
+}
 /* Dashboard styles are included in App.css for this generated starter. */

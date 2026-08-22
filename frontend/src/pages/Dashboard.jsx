@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { tours, destinations } from "../data/mockData";
+import "./Dashboard.css";
 
 export default function Dashboard() {
   const { user } = useAuth();
