@@ -19,7 +19,8 @@ export default function Booking() {
   const [traveler,setTraveler] = useState({ name:user?.name || "", email:user?.email || "", phone:user?.phone || "" });
   const [error,setError] = useState(""); const [saving,setSaving] = useState(false);
 
-  const vehicleCost = Number(planner.distance || 0) * vehicle.costPerKm;
+  // prefer cost calculated by planner (fuelCost or vehicleCost) if available
+  const vehicleCost = Number(planner.vehicleCost || planner.fuelCost || 0) || Number(planner.distance || 0) * vehicle.costPerKm;
   const additional = 500;
   const total = (tour?.price || 0) * Number(planner.members || 1) + vehicleCost + additional;
 
@@ -28,7 +29,7 @@ export default function Booking() {
     if (Number(planner.members || 1) > vehicle.capacity) return setError("Selected vehicle cannot accommodate all travelers.");
     setSaving(true);
     try {
-      const booking = await createBooking({ traveler, tourId: tour?.id || null, tour: tour?.title || "Custom trip", start:routeStart, destination:routeDestination, stops:routeStops, date, members:Number(planner.members || 1), vehicle:vehicle.name, distance:Number(planner.distance || 0), basePrice:(tour?.price || 0) * Number(planner.members || 1), vehicleCost, additional, total });
+      const booking = await createBooking({ traveler, tourId: tour?.id || null, tour: tour?.title || "Custom trip", start:routeStart, destination:routeDestination, stops:routeStops, date, members:Number(planner.members || 1), vehicle:vehicle.name, distance:Number(planner.distance || 0), basePrice:(planner.basePrice !== undefined ? planner.basePrice : (tour?.price || 0) * Number(planner.members || 1)), vehicleCost, additional, total });
       navigate("/my-bookings", { state:{success:`Booking ${booking.id} confirmed successfully.`} });
     } catch { setError("Booking failed. Please try again."); } finally { setSaving(false); }
   };

@@ -111,8 +111,8 @@ export const getMyBookings = async () => {
   const response = await api.get("/bookings/my-bookings");
 
   const bookings = response.data?.bookings || [];
-  // normalize id
-  return bookings.map(b => ({ ...b, id: b.id || b._id }));
+  // normalize id and total price field to `total` for frontend convenience
+  return bookings.map(b => ({ ...b, id: b.id || b._id, total: b.total || b.totalPrice }));
 };
 
 export const cancelBooking = async (id) => {
