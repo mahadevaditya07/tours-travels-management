@@ -1,153 +1,282 @@
-import { locations } from "../data/mockData.js";
+// src/pages/mapPlannerUtils.js
 
 export const distanceBetween = (a, b) => {
+  if (!Array.isArray(a) || !Array.isArray(b)) return 0;
+
   const R = 6371;
+
   const dLat = ((b[0] - a[0]) * Math.PI) / 180;
   const dLon = ((b[1] - a[1]) * Math.PI) / 180;
+
   const x =
     Math.sin(dLat / 2) ** 2 +
     Math.cos((a[0] * Math.PI) / 180) *
       Math.cos((b[0] * Math.PI) / 180) *
       Math.sin(dLon / 2) ** 2;
+
   return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 };
 
 export const normalizeStop = (stop) => {
   if (!stop) return null;
+
   if (typeof stop === "string") {
-    return { id: `stop-${stop.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`, name: stop.trim() };
+    const name = stop.trim();
+
+    if (!name) return null;
+
+    return {
+      id: `stop-${name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
+      name,
+      coords: null,
+    };
   }
 
+  const name = stop.name?.trim();
+
+  if (!name) return null;
+
   return {
-    id: stop.id || `stop-${(stop.name || "custom").toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
-    name: stop.name?.trim() || "Custom stop",
-    coords: stop.coords || null
+    id:
+      stop.id ||
+      `stop-${name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
+    name,
+    coords: stop.coords || null,
   };
 };
 
-export const buildLocationSearchQueries = (placeName, routeContext = {}) => {
-  const { start, destination } = routeContext;
+/*
+ * Build several searches because place names can be ambiguous.
+ *
+ * Example:
+ * Bhandiwad
+ * Bhandiwad, Hubli
+ * Bhandiwad, Karnataka
+ * Bhandiwad, Hubli, Karnataka, India
+ */
+export const buildLocationSearchQueries = (
+  placeName,
+  routeContext = {}
+) => {
   const baseName = (placeName || "").trim();
+
   if (!baseName) return [];
 
-  const routeHints = [];
-  const startName = typeof start === "string" ? start : start?.name;
-  const destinationName = typeof destination === "string" ? destination : destination?.name;
+  const startName =
+    typeof routeContext.start === "string"
+      ? routeContext.start
+      : routeContext.start?.name;
 
-  if (startName) routeHints.push(startName);
-  if (destinationName) routeHints.push(destinationName);
-  const regionHints = ["Karnataka", "India"];
+  const destinationName =
+    typeof routeContext.destination === "string"
+      ? routeContext.destination
+      : routeContext.destination?.name;
+
   const queries = new Set();
 
   queries.add(baseName);
-  queries.add(`${baseName}, ${startName || "Karnataka"}`);
-  queries.add(`${baseName}, ${destinationName || "Karnataka"}`);
-  queries.add(`${baseName}, ${startName || destinationName || "Karnataka"}, Karnataka, India`);
-  queries.add(`${baseName}, ${destinationName || startName || "Karnataka"}, Karnataka, India`);
-  queries.add(`${baseName}, ${routeHints.join(" to ")}, Karnataka, India`);
 
-  routeHints.forEach((hint) => {
-    queries.add(`${baseName}, ${hint}`);
-    queries.add(`${baseName}, ${hint}, Karnataka`);
-    queries.add(`${baseName}, ${hint}, India`);
-  });
+  if (startName) {
+    queries.add(`${baseName}, ${startName}`);
+    queries.add(`${baseName}, ${startName}, Karnataka`);
+    queries.add(`${baseName}, ${startName}, Karnataka, India`);
+  }
 
-  regionHints.forEach((region) => {
-    queries.add(`${baseName}, ${region}`);
-    queries.add(`${baseName}, Karnataka, India`);
-  });
+  if (destinationName) {
+    queries.add(`${baseName}, ${destinationName}`);
+    queries.add(`${baseName}, ${destinationName}, Karnataka`);
+    queries.add(`${baseName}, ${destinationName}, Karnataka, India`);
+  }
 
-  return [...queries].filter(Boolean);
+  queries.add(`${baseName}, Karnataka`);
+  queries.add(`${baseName}, Karnataka, India`);
+  queries.add(`${baseName}, India`);
+
+  return [...queries];
 };
 
-export const pickBestGeocodeMatch = (candidates = [], placeName, routeContext = {}) => {
-  if (!Array.isArray(candidates) || candidates.length === 0) return null;
-  const normalizedName = (placeName || "").toLowerCase();
-  const routeStart = routeContext.start?.coords || locations[(typeof routeContext.start === "string" ? routeContext.start : routeContext.start?.name)] || [15.3647, 75.124];
-  const routeDest = routeContext.destination?.coords || locations[(typeof routeContext.destination === "string" ? routeContext.destination : routeContext.destination?.name)] || [14.5479, 74.3188];
+/*
+ * Select the most suitable Nominatim result.
+ */
+export const pickBestGeocodeMatch = (
+  candidates = [],
+  placeName,
+  routeContext = {}
+) => {
+  if (!Array.isArray(candidates) || candidates.length === 0) {
+    return null;
+  }
 
-  const bestCandidate = candidates
-    .map((candidate) => {
-      const display = candidate?.display_name || "";
-      const text = display.toLowerCase();
-      const exactNameScore = text.includes(normalizedName) ? 40 : 0;
-      const routeNearbyScore = (() => {
-        const lat = Number(candidate?.lat ?? 0);
-        const lon = Number(candidate?.lon ?? 0);
-        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return 0;
-        const startDistance = Math.hypot(lat - routeStart[0], lon - routeStart[1]);
-        const destDistance = Math.hypot(lat - routeDest[0], lon - routeDest[1]);
-        return Math.max(0, 25 - Math.min(startDistance, destDistance) * 120);
-      })();
-      const localityScore = text.includes("karnataka") ? 10 : 0;
-      const regionScore = text.includes("hubli") || text.includes("dharwad") || text.includes("mantur") ? 15 : 0;
-      const score = exactNameScore + routeNearbyScore + localityScore + regionScore;
-      return { candidate, score };
-    })
-    .sort((a, b) => b.score - a.score)[0];
+  const normalizedName = (placeName || "").toLowerCase().trim();
 
-  return bestCandidate?.candidate || candidates[0];
-};
+  const startCoords = routeContext.start?.coords;
+  const destinationCoords = routeContext.destination?.coords;
 
-export const inferCoordsFromRoute = (name, index, totalStops, start, destination) => {
-  const resolveCoord = (v, fallback) => {
-    if (!v) return fallback;
-    if (Array.isArray(v)) return v;
-    if (typeof v === 'object' && v.coords) return v.coords;
-    return locations[v] || fallback;
-  };
-  const startCoord = resolveCoord(start, [15.3647, 75.124]);
-  const destinationCoord = resolveCoord(destination, [14.5479, 74.3188]);
-  const baseOffset = totalStops === 0 ? 0.09 : 0.12 + (index + 1) * 0.025;
-  const ratio = (index + 1) / (totalStops + 2);
-  const lat = startCoord[0] + (destinationCoord[0] - startCoord[0]) * ratio + (index % 2 === 0 ? 1 : -1) * baseOffset;
-  const lng = startCoord[1] + (destinationCoord[1] - startCoord[1]) * ratio + (index % 2 === 0 ? 1 : -1) * baseOffset * 0.8;
-  return [Number(lat.toFixed(4)), Number(lng.toFixed(4))];
-};
+  const scoreCandidate = (candidate) => {
+    const displayName = (
+      candidate?.display_name ||
+      ""
+    ).toLowerCase();
 
-export const ensureStop = (place, index, routeContext = {}) => {
-  const { start = "Hubli", destination = "Gokarna" } = routeContext;
-  const stopName = typeof place === "string" ? place.trim() : place?.name?.trim();
-  if (!stopName) return null;
+    let score = 0;
 
-  const normalized = normalizeStop(place || stopName);
-  if (normalized.coords) return normalized;
-
-  const coords = locations[stopName] || inferCoordsFromRoute(stopName, index, 1, start, destination);
-  return { ...normalized, coords };
-};
-
-export const buildRoutePoints = (start, destination, stops = []) => {
-  const resolveCoord = (v, fallback) => {
-    if (!v) return fallback;
-    if (Array.isArray(v)) return v;
-    if (typeof v === 'object' && v.coords) return v.coords;
-    return locations[v] || fallback;
-  };
-  const startPoint = resolveCoord(start, [15.3647, 75.124]);
-  const destinationPoint = resolveCoord(destination, [14.5479, 74.3188]);
-  const route = [startPoint];
-
-  const normalizedStops = (stops || []).map((stop, index) => {
-    if (typeof stop === "string") {
-      return ensureStop(stop, index, { start, destination });
+    // Exact place name match
+    if (displayName.includes(normalizedName)) {
+      score += 50;
     }
-    if (stop?.coords) {
-      return stop;
-    }
-    return ensureStop(stop, index, { start, destination });
-  }).filter(Boolean);
 
-  normalizedStops.forEach((stop) => {
-    route.push(stop.coords || inferCoordsFromRoute(stop.name, normalizedStops.indexOf(stop), normalizedStops.length, start, destination));
+    // Prefer Karnataka
+    if (displayName.includes("karnataka")) {
+      score += 20;
+    }
+
+    // Prefer India
+    if (displayName.includes("india")) {
+      score += 10;
+    }
+
+    const lat = Number(candidate?.lat);
+    const lon = Number(candidate?.lon);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      return score;
+    }
+
+    // Prefer result close to start
+    if (Array.isArray(startCoords)) {
+      const distance = Math.hypot(
+        lat - startCoords[0],
+        lon - startCoords[1]
+      );
+
+      score += Math.max(0, 20 - distance * 100);
+    }
+
+    // Prefer result close to destination
+    if (Array.isArray(destinationCoords)) {
+      const distance = Math.hypot(
+        lat - destinationCoords[0],
+        lon - destinationCoords[1]
+      );
+
+      score += Math.max(0, 20 - distance * 100);
+    }
+
+    return score;
+  };
+
+  return candidates
+    .map((candidate) => ({
+      candidate,
+      score: scoreCandidate(candidate),
+    }))
+    .sort((a, b) => b.score - a.score)[0]?.candidate || candidates[0];
+};
+
+/*
+ * Convert stop/start/destination into a consistent coordinate format.
+ */
+export const resolveCoordinates = (place) => {
+  if (!place) return null;
+
+  if (Array.isArray(place)) {
+    return place;
+  }
+
+  if (Array.isArray(place.coords)) {
+    return place.coords;
+  }
+
+  return null;
+};
+
+/*
+ * Create the ordered list of points:
+ *
+ * Start
+ * ↓
+ * Stop 1
+ * ↓
+ * Stop 2
+ * ↓
+ * Destination
+ */
+export const buildRoutePoints = (
+  start,
+  destination,
+  stops = []
+) => {
+  const startCoords = resolveCoordinates(start);
+  const destinationCoords = resolveCoordinates(destination);
+
+  if (!startCoords || !destinationCoords) {
+    return [];
+  }
+
+  const route = [startCoords];
+
+  stops.forEach((stop) => {
+    const coords = resolveCoordinates(stop);
+
+    if (coords) {
+      route.push(coords);
+    }
   });
 
-  route.push(destinationPoint);
+  route.push(destinationCoords);
+
   return route;
 };
 
-export const getRouteDistance = (routePoints = []) => routePoints.slice(1).reduce((sum, point, index) => {
-  const previous = routePoints[index];
-  if (!previous) return sum;
-  return sum + distanceBetween(previous, point);
-}, 0);
+/*
+ * Fallback straight-line distance.
+ *
+ * The actual displayed route distance will come from OSRM.
+ */
+export const getRouteDistance = (routePoints = []) => {
+  if (!Array.isArray(routePoints) || routePoints.length < 2) {
+    return 0;
+  }
+
+  return routePoints
+    .slice(1)
+    .reduce((total, point, index) => {
+      const previous = routePoints[index];
+
+      return total + distanceBetween(previous, point);
+    }, 0);
+};
+
+/*
+ * OSRM uses:
+ *
+ * longitude,latitude
+ *
+ * Leaflet uses:
+ *
+ * latitude,longitude
+ */
+export const toOSRMCoordinate = ([lat, lon]) =>
+  `${lon},${lat}`;
+
+/*
+ * Build OSRM request URL.
+ */
+export const buildOSRMUrl = (routePoints = []) => {
+  if (routePoints.length < 2) {
+    return null;
+  }
+
+  const coordinates = routePoints
+    .map(toOSRMCoordinate)
+    .join(";");
+
+  return (
+    `https://router.project-osrm.org/route/v1/driving/` +
+    `${coordinates}` +
+    `?overview=full` +
+    `&geometries=geojson` +
+    `&alternatives=true` +
+    `&steps=true`
+  );
+};
