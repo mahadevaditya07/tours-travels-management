@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import { attractions, locations, vehicles } from "../data/mockData";
-import { buildRoutePoints, ensureStop, getRouteDistance } from "./mapPlannerUtils";
+import { buildLocationSearchQueries, buildRoutePoints, ensureStop, getRouteDistance, pickBestGeocodeMatch } from "./mapPlannerUtils";
 import "./MapPlanner.css";
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -26,7 +26,7 @@ function AutoCenterMap({ route }) {
   return null;
 }
 
-const geocodePlace = async (rawValue) => {
+const geocodePlace = async (rawValue, routeContext = {}) => {
   const query = (rawValue || "").trim();
   if (!query) return null;
 
@@ -34,23 +34,29 @@ const geocodePlace = async (rawValue) => {
     return { name: query, coords: locations[query] };
   }
 
-  try {
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`, {
-      headers: { Accept: "application/json" }
-    });
+  const queryVariants = [...new Set(buildLocationSearchQueries(query, routeContext))];
 
-    if (!response.ok) return null;
-    const results = await response.json();
-    const place = results?.[0];
-    if (!place) return null;
+  for (const variant of queryVariants) {
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&q=${encodeURIComponent(variant)}`, {
+        headers: { Accept: "application/json" }
+      });
 
-    return {
-      name: place.display_name?.split(",")[0]?.trim() || query,
-      coords: [Number(place.lat), Number(place.lon)]
-    };
-  } catch {
-    return null;
+      if (!response.ok) continue;
+      const results = await response.json();
+      const place = pickBestGeocodeMatch(results, query, routeContext);
+      if (!place) continue;
+
+      return {
+        name: place.display_name?.split(",")[0]?.trim() || query,
+        coords: [Number(place.lat), Number(place.lon)]
+      };
+    } catch {
+      continue;
+    }
   }
+
+  return null;
 };
 
 export default function MapPlanner() {
@@ -91,7 +97,7 @@ export default function MapPlanner() {
     }
 
     setIsFindingPlace(true);
-    const resolved = await geocodePlace(query);
+    const resolved = await geocodePlace(query, { start, destination });
     setIsFindingPlace(false);
     if (!resolved) return;
 
@@ -118,7 +124,7 @@ export default function MapPlanner() {
     if (!nextStop || !nextStop.name) return;
 
     if (!nextStop.coords) {
-      const resolved = await geocodePlace(query);
+      const resolved = await geocodePlace(query, { start, destination });
       if (resolved) {
         nextStop = { ...nextStop, name: resolved.name, coords: resolved.coords };
       }

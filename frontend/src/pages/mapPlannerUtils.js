@@ -25,6 +25,70 @@ export const normalizeStop = (stop) => {
   };
 };
 
+export const buildLocationSearchQueries = (placeName, routeContext = {}) => {
+  const { start, destination } = routeContext;
+  const baseName = (placeName || "").trim();
+  if (!baseName) return [];
+
+  const routeHints = [];
+  const startName = typeof start === "string" ? start : start?.name;
+  const destinationName = typeof destination === "string" ? destination : destination?.name;
+
+  if (startName) routeHints.push(startName);
+  if (destinationName) routeHints.push(destinationName);
+  const regionHints = ["Karnataka", "India"];
+  const queries = new Set();
+
+  queries.add(baseName);
+  queries.add(`${baseName}, ${startName || "Karnataka"}`);
+  queries.add(`${baseName}, ${destinationName || "Karnataka"}`);
+  queries.add(`${baseName}, ${startName || destinationName || "Karnataka"}, Karnataka, India`);
+  queries.add(`${baseName}, ${destinationName || startName || "Karnataka"}, Karnataka, India`);
+  queries.add(`${baseName}, ${routeHints.join(" to ")}, Karnataka, India`);
+
+  routeHints.forEach((hint) => {
+    queries.add(`${baseName}, ${hint}`);
+    queries.add(`${baseName}, ${hint}, Karnataka`);
+    queries.add(`${baseName}, ${hint}, India`);
+  });
+
+  regionHints.forEach((region) => {
+    queries.add(`${baseName}, ${region}`);
+    queries.add(`${baseName}, Karnataka, India`);
+  });
+
+  return [...queries].filter(Boolean);
+};
+
+export const pickBestGeocodeMatch = (candidates = [], placeName, routeContext = {}) => {
+  if (!Array.isArray(candidates) || candidates.length === 0) return null;
+  const normalizedName = (placeName || "").toLowerCase();
+  const routeStart = routeContext.start?.coords || locations[(typeof routeContext.start === "string" ? routeContext.start : routeContext.start?.name)] || [15.3647, 75.124];
+  const routeDest = routeContext.destination?.coords || locations[(typeof routeContext.destination === "string" ? routeContext.destination : routeContext.destination?.name)] || [14.5479, 74.3188];
+
+  const bestCandidate = candidates
+    .map((candidate) => {
+      const display = candidate?.display_name || "";
+      const text = display.toLowerCase();
+      const exactNameScore = text.includes(normalizedName) ? 40 : 0;
+      const routeNearbyScore = (() => {
+        const lat = Number(candidate?.lat ?? 0);
+        const lon = Number(candidate?.lon ?? 0);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return 0;
+        const startDistance = Math.hypot(lat - routeStart[0], lon - routeStart[1]);
+        const destDistance = Math.hypot(lat - routeDest[0], lon - routeDest[1]);
+        return Math.max(0, 25 - Math.min(startDistance, destDistance) * 120);
+      })();
+      const localityScore = text.includes("karnataka") ? 10 : 0;
+      const regionScore = text.includes("hubli") || text.includes("dharwad") || text.includes("mantur") ? 15 : 0;
+      const score = exactNameScore + routeNearbyScore + localityScore + regionScore;
+      return { candidate, score };
+    })
+    .sort((a, b) => b.score - a.score)[0];
+
+  return bestCandidate?.candidate || candidates[0];
+};
+
 export const inferCoordsFromRoute = (name, index, totalStops, start, destination) => {
   const resolveCoord = (v, fallback) => {
     if (!v) return fallback;
