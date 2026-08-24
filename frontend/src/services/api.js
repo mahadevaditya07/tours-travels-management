@@ -136,4 +136,14 @@ export const updateProfile = async (data) => {
   return response.data;
 };
 
+export const saveExperience = async () => {
+  const response = await api.post('/users/profile/save');
+  return response.data;
+};
+
+export const addRating = async (rating) => {
+  const response = await api.post('/users/profile/rate', { rating });
+  return response.data;
+};
+
 export default api;

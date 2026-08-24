@@ -1,0 +1,8 @@
+.star-rating { display:flex; gap:8px; align-items:center; }
+.star-rating button { background:transparent; border:0; cursor:pointer; padding:0; color:#ddd; transform-origin:center; transition: transform .15s ease, color .12s ease; line-height:1; }
+.star-rating button.star-filled { color: #ffb400; }
+.star-rating button:hover { transform: scale(1.18); }
+.star-rating.small button { gap:6px; }
+.star-rating.small button { transform-origin:center; }
+.star-rating.medium button { }
+.star-rating.large button { }

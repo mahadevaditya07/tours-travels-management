@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import DestinationCard from "../components/DestinationCard";
 import TourCard from "../components/TourCard";
 import { destinations, tours } from "../data/mockData";
 import "./Home.css";
 
 export default function Home() {
+  const { isAuthenticated } = useAuth();
   return (
     <>
       <section className="hero">
@@ -62,12 +64,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="cta-section">
-        <div className="container cta-box">
-          <div><span className="eyebrow">Ready when you are</span><h2 className="section-title">Turn a destination into a journey.</h2><p>Build your route and let Tours & Travels Management handle the details.</p></div>
-          <Link className="btn btn-primary" to="/register">Create free account →</Link>
-        </div>
-      </section>
+      {!isAuthenticated && (
+        <section className="cta-section">
+          <div className="container cta-box">
+            <div><span className="eyebrow">Ready when you are</span><h2 className="section-title">Turn a destination into a journey.</h2><p>Build your route and let Tours & Travels Management handle the details.</p></div>
+            <Link className="btn btn-primary" to="/register">Create free account →</Link>
+          </div>
+        </section>
+      )}
     </>
   );
 }

@@ -14,8 +14,8 @@ export default function Dashboard() {
       <div className="dashboard-main">
         <div className="stats-grid">
           <div className="stat-card-lg card"><span>Upcoming trips</span><strong>{upcoming.length}</strong><small>Keep exploring</small></div>
-          <div className="stat-card-lg card"><span>Saved experiences</span><strong>12</strong><small>Curated for you</small></div>
-          <div className="stat-card-lg card"><span>Traveler rating</span><strong>4.9</strong><small>Average experience</small></div>
+          <div className="stat-card-lg card"><span>Saved experiences</span><strong>{user?.savedExperience ?? 12}</strong><small>Curated for you</small></div>
+          <div className="stat-card-lg card"><span>Traveler rating</span><strong>{user?.rating?.toFixed ? user.rating.toFixed(1) : (user?.rating ?? 4.9)}</strong><small>Average experience</small></div>
         </div>
         <div className="card dash-panel">
           <div className="section-head"><div><span className="eyebrow">Quick actions</span><h2>What are you planning?</h2></div></div>

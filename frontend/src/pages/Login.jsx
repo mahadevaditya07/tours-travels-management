@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./Login.css";
@@ -10,6 +10,10 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
+  useEffect(()=>{
+    // Clear any prefilled values to avoid showing previous credentials
+    setForm({ email: "", password: "" });
+  },[]);
   
   
 
@@ -23,9 +27,9 @@ export default function Login() {
     <div className="auth-panel"><div className="auth-form">
       <span className="eyebrow">Account access</span><h2>Sign in</h2><p className="muted">Enter your details to access your travel dashboard.</p>
       {error && <div className="notice error">{error}</div>}
-      <form onSubmit={submit}>
-        <div className="field"><label>Email</label><input type="email" required value={form.email} onChange={e => setForm({...form,email:e.target.value})} placeholder="you@example.com" /></div>
-        <div className="field"><label>Password</label><div className="password-wrap"><input type={show ? "text" : "password"} required value={form.password} onChange={e => setForm({...form,password:e.target.value})} placeholder="••••••••" /><button type="button" onClick={() => setShow(v=>!v)}>{show ? "Hide" : "Show"}</button></div></div>
+      <form onSubmit={submit} autoComplete="off">
+        <div className="field"><label>Email</label><input type="email" autoComplete="off" required value={form.email} onChange={e => setForm({...form,email:e.target.value})} placeholder="you@example.com" /></div>
+        <div className="field"><label>Password</label><div className="password-wrap"><input type={show ? "text" : "password"} autoComplete="new-password" required value={form.password} onChange={e => setForm({...form,password:e.target.value})} placeholder="••••••••" /><button type="button" onClick={() => setShow(v=>!v)}>{show ? "Hide" : "Show"}</button></div></div>
         <div className="form-row"><label className="remember"><input type="checkbox" /> Remember me</label><button type="button" className="link-button">Forgot password?</button></div>
         <button className="btn btn-primary full" disabled={loading}>{loading ? "Signing in..." : "Sign in →"}</button>
       </form>
