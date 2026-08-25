@@ -121,8 +121,36 @@ export const pickBestGeocodeMatch = (
     let score = 0;
 
     // Exact place name match
-    if (displayName.includes(normalizedName)) {
-      score += 50;
+    // Prefer candidates where the display name starts with
+    // the requested place (more likely the exact match).
+    if (displayName.startsWith(normalizedName)) {
+      score += 80;
+    } else if (displayName.includes(normalizedName)) {
+      score += 30;
+    }
+
+    // If Nominatim returned address components, prefer
+    // candidates where the city/town/village exactly matches
+    // the requested place name (this helps Dharwad vs Hubli).
+    const addr = candidate?.address || {};
+    const addrParts = [
+      addr.city,
+      addr.town,
+      addr.village,
+      addr.county,
+      addr.hamlet,
+      addr.municipality,
+      addr.suburb,
+    ]
+      .filter(Boolean)
+      .map((s) => String(s).toLowerCase());
+
+    if (
+      addrParts.some(
+        (part) => part === normalizedName
+      )
+    ) {
+      score += 120;
     }
 
     // Prefer Karnataka
