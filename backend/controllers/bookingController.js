@@ -5,28 +5,82 @@ const crypto = require('crypto');
 exports.createBooking = async (req, res) => {
   try {
     const b = req.body;
-    const t = b.tour ? await Tour.findById(b.tour).catch(() => null) : null;
+    const t = b.tour
+      ? await Tour.findById(b.tour).catch(() => null)
+      : null;
 
-    if (!b.name || !b.email || !b.phone || !b.startLocation || !b.destination || !b.travelDate || !b.members || !b.vehicle || b.totalPrice === undefined) {
-      return res.status(400).json({ success: false, message: 'Please provide all required booking details.' });
+    // Required fields
+    if (
+      !b.name ||
+      !b.email ||
+      !b.phone ||
+      !b.startLocation ||
+      !b.destination ||
+      !b.travelDate ||
+      !b.members ||
+      !b.vehicle ||
+      b.totalPrice === undefined
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide all required booking details.'
+      });
     }
 
-    // Server-side vehicle capacity and rate lookup using Vehicle model
+    // --------------------------------------------------
+    // BOOKING DATE VALIDATION
+    // Booking date MUST be after today
+    // --------------------------------------------------
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const travelDate = new Date(b.travelDate);
+    travelDate.setHours(0, 0, 0, 0);
+
+    if (isNaN(travelDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid travel date.'
+      });
+    }
+
+    if (travelDate <= today) {
+      return res.status(400).json({
+        success: false,
+        message: 'Booking date must be after today.'
+      });
+    }
+
+    // --------------------------------------------------
+    // VEHICLE CAPACITY CHECK
+    // --------------------------------------------------
     const Vehicle = require('../models/Vehicle');
+
     let vehicleDoc = null;
+
     if (b.vehicle) {
-      // Try to find by name first, then id
-      vehicleDoc = await Vehicle.findOne({ $or: [{ name: b.vehicle }, { id: b.vehicle }] }).catch(() => null);
+      vehicleDoc = await Vehicle.findOne({
+        $or: [
+          { name: b.vehicle },
+          { id: b.vehicle }
+        ]
+      }).catch(() => null);
     }
 
     if (vehicleDoc) {
       const maxPassengers = Math.max(0, vehicleDoc.capacity - 1);
+
       if (Number(b.members) > maxPassengers) {
-        return res.status(400).json({ success: false, message: `Selected vehicle ${vehicleDoc.name} supports maximum ${maxPassengers} passengers.` });
+        return res.status(400).json({
+          success: false,
+          message: `Selected vehicle ${vehicleDoc.name} supports maximum ${maxPassengers} passengers.`
+        });
       }
     }
 
-    // Create booking as Pending until user confirms their email/phone
+    // --------------------------------------------------
+    // CREATE BOOKING
+    // --------------------------------------------------
     const confirmationToken = crypto.randomBytes(20).toString('hex');
     const confirmationExpires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
 
@@ -54,6 +108,7 @@ exports.createBooking = async (req, res) => {
 
     const x = await Booking.create(bookingData);
 
+    // Send a confirmation link (user must confirm to activate booking)
     const link = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/confirm-booking?token=${confirmationToken}&bookingId=${x._id}`;
     try {
       const mailer = require('../utils/mailer');
@@ -65,9 +120,21 @@ exports.createBooking = async (req, res) => {
       console.log('Booking confirmation send failed, fallback link:', link, err.message || err);
     }
 
-    res.status(201).json({ success: true, message: 'Booking created. A confirmation link has been sent to the provided contact. Please verify to confirm the booking.', booking: x });
+    console.log('Booking confirmation link (debug):', link);
+
+    const mailerConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER);
+    const smsConfigured = !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN);
+    const debug = (!mailerConfigured && !smsConfigured) ? { confirmationLink: link } : undefined;
+
+    res.status(201).json({ success: true, message: 'Booking created. A confirmation link has been sent to the provided contact. Please verify to confirm the booking.', booking: x, debug });
+
   } catch (e) {
-    res.status(400).json({ success: false, message: e.message });
+    console.error('Create booking error:', e);
+
+    res.status(400).json({
+      success: false,
+      message: e.message
+    });
   }
 };
 
@@ -104,6 +171,19 @@ exports.confirmBooking = async (req, res) => {
     b.confirmationToken = undefined;
     b.confirmationExpires = undefined;
     await b.save();
+    // Send confirmation email/SMS with booking details
+    try {
+      const mailer = require('../utils/mailer');
+      const details = `Booking ID: ${b.bookingId}\nTour: ${b.tourName || 'N/A'}\nDate: ${b.travelDate}\nFrom: ${b.startLocation}\nTo: ${b.destination}\nPassengers: ${b.members}\nTotal: ${b.totalPrice}`;
+      const html = `<h3>Your booking is confirmed</h3><p>${details.replace(/\n/g,'<br/>')}</p>`;
+      await mailer.sendEmail({ to: b.email, subject: 'Your booking is confirmed', text: details, html });
+      if (b.phone && process.env.TWILIO_ACCOUNT_SID) {
+        await mailer.sendSms({ to: b.phone, body: `Your booking is confirmed. ${b.tourName || ''} on ${b.travelDate}. Booking ID: ${b.bookingId}` });
+      }
+    } catch (err) {
+      console.log('Failed sending booking confirmation notification:', err.message || err);
+    }
+
     res.json({ success: true, message: 'Booking confirmed.', booking: b });
   } catch (e) {
     res.status(400).json({ success: false, message: e.message });

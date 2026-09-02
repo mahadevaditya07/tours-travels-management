@@ -1,12 +1,23 @@
-const r = require('express').Router();
-const c = require('../controllers/authController');
+const express = require('express');
+const router = express.Router();
 
-r.post('/register', c.register);
-r.post('/login', c.login);
+const {
+  register,
+  login,
+  forgotPassword,
+  resetPassword
+} = require('../controllers/authController');
 
-// Verification and password reset
-r.post('/verify-account', c.verifyAccount);
-r.post('/forgot-password', c.forgotPassword);
-r.post('/reset-password', c.resetPassword);
+// Register
+router.post('/register', register);
 
-module.exports = r;
+// Login
+router.post('/login', login);
+
+// Forgot password - sends reset link to email
+router.post('/forgot-password', forgotPassword);
+
+// Reset password
+router.post('/reset-password', resetPassword);
+
+module.exports = router;

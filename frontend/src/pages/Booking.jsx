@@ -32,8 +32,13 @@ export default function Booking() {
     setSaving(true);
     try {
       const booking = await createBooking({ traveler, tourId: tour?.id || null, tour: tour?.title || "Custom trip", start:routeStart, destination:routeDestination, stops:routeStops, date, members:Number(planner.members || 1), vehicle:vehicle.name, distance:Number(planner.distance || 0), basePrice:(planner.basePrice !== undefined ? planner.basePrice : (tour?.price || 0) * Number(planner.members || 1)), vehicleCost, additional, total });
-      navigate("/my-bookings", { state:{success:`Booking ${booking.id} confirmed successfully.`} });
-    } catch { setError("Booking failed. Please try again."); } finally { setSaving(false); }
+      // If backend returned a debug confirmation link (dev mode), show it to the user via state
+      if (booking?.debug?.confirmationLink) {
+        navigate('/my-bookings', { state: { success: `Booking created. Confirmation link: ${booking.debug.confirmationLink}` } });
+      } else {
+        navigate("/my-bookings", { state:{success:`Booking ${booking.id} created successfully.`} });
+      }
+    } catch (err) { setError(err?.message || "Booking failed. Please try again."); } finally { setSaving(false); }
   };
 
   return <div className="page"><div className="container page-title-wrap"><span className="eyebrow">Secure your journey</span><h1 className="section-title">Confirm your booking.</h1><p className="muted">Review your route, traveler details and estimated price.</p></div>

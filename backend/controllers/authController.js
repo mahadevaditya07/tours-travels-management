@@ -18,25 +18,10 @@ exports.register = async (req, res) => {
 
 		if (await User.findOne({ email: email.toLowerCase() })) return res.status(409).json({ success: false, message: 'An account with this email already exists.' });
 
-		// Create user but do NOT log them in automatically. Generate verification token
-		const verificationToken = crypto.randomBytes(24).toString('hex');
-		const verificationExpires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+		// Create user and mark verified immediately (no verification required)
+		const u = await User.create({ name, email: email.toLowerCase(), password: await bcrypt.hash(password, 12), phone, isVerified: true });
 
-		const u = await User.create({ name, email: email.toLowerCase(), password: await bcrypt.hash(password, 12), phone, isVerified: false, verificationToken, verificationExpires });
-
-				const link = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-account?token=${verificationToken}&email=${encodeURIComponent(u.email)}`;
-				// Send verification via email and/or SMS
-				try {
-					const mailer = require('../utils/mailer');
-					await mailer.sendEmail({ to: u.email, subject: 'Verify your account', text: `Verify your account: ${link}`, html: `<p>Verify your account: <a href="${link}">${link}</a></p>` });
-					if (u.phone && process.env.TWILIO_ACCOUNT_SID) {
-						await mailer.sendSms({ to: u.phone, body: `Verify your account: ${link}` });
-					}
-				} catch (err) {
-					console.log('Verification send failed, falling back to console link:', link, err.message || err);
-				}
-
-		res.status(201).json({ success: true, message: 'Registration successful. Please check your email or phone for a verification link before logging in.' });
+		res.status(201).json({ success: true, message: 'Registration successful. You may now log in.' });
 	} catch (e) {
 		res.status(500).json({ success: false, message: e.message });
 	}
@@ -63,7 +48,7 @@ exports.login = async (req, res) => {
 		const { email, password } = req.body;
 		const u = await User.findOne({ email: email?.toLowerCase() });
 		if (!u || !(await bcrypt.compare(password || '', u.password))) return res.status(401).json({ success: false, message: 'Invalid email or password.' });
-		if (!u.isVerified) return res.status(403).json({ success: false, message: 'Account not verified. Please verify your email or phone before login.' });
+		// Previously required verification; now allow login without verification.
 		res.json({ success: true, message: 'Login successful.', token: token(u._id), user: safeUser(u) });
 	} catch (e) {
 		res.status(500).json({ success: false, message: e.message });
@@ -72,51 +57,180 @@ exports.login = async (req, res) => {
 
 // Forgot password: generate reset token and (placeholder) send link
 exports.forgotPassword = async (req, res) => {
-	try {
-		const { emailOrPhone } = req.body;
-		if (!emailOrPhone) return res.status(400).json({ success: false, message: 'Email or phone is required.' });
+  try {
+    const { email } = req.body;
 
-		const u = await User.findOne({ $or: [{ email: emailOrPhone.toLowerCase() }, { phone: emailOrPhone }] });
-		if (!u) return res.status(200).json({ success: true, message: 'If an account matches the provided contact, a reset link has been sent.' });
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required.",
+      });
+    }
 
-		const resetToken = crypto.randomBytes(24).toString('hex');
-		u.resetPasswordToken = resetToken;
-		u.resetPasswordExpires = Date.now() + (60 * 60 * 1000); // 1 hour
-		await u.save();
+    const contact = String(email).trim().toLowerCase();
 
-				const link = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}&email=${encodeURIComponent(u.email)}`;
-				try {
-					const mailer = require('../utils/mailer');
-					await mailer.sendEmail({ to: u.email, subject: 'Reset your password', text: `Reset: ${link}`, html: `<p>Reset your password: <a href="${link}">${link}</a></p>` });
-					if (u.phone && process.env.TWILIO_ACCOUNT_SID) {
-						await mailer.sendSms({ to: u.phone, body: `Reset your password: ${link}` });
-					}
-				} catch (err) {
-					console.log('Reset send failed, falling back to console link:', link, err.message || err);
-				}
+    const user = await User.findOne({ email: contact });
 
-		res.json({ success: true, message: 'If an account matches the provided contact, a reset link has been sent.' });
-	} catch (e) {
-		res.status(500).json({ success: false, message: e.message });
-	}
+    // Don't reveal whether the email exists
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message:
+          "If an account exists with this email, a password reset link has been sent.",
+      });
+    }
+
+    // Generate secure reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+
+    await user.save();
+
+    const resetLink =
+      `${process.env.FRONTEND_URL}/reset-password` +
+      `?token=${encodeURIComponent(resetToken)}` +
+      `&email=${encodeURIComponent(user.email)}`;
+
+    const mailer = require("../utils/mailer");
+
+    await mailer.sendEmail({
+      to: user.email,
+      subject: "Tours & Travels - Password Reset",
+
+      text: `
+Hello ${user.name},
+
+We received a request to reset your Tours & Travels password.
+
+Click the link below to reset your password:
+
+${resetLink}
+
+This link is valid for 15 minutes.
+
+If you did not request a password reset, please ignore this email.
+
+Regards,
+Tours & Travels Management
+`,
+
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>Tours & Travels Management</h2>
+
+          <p>Hello <strong>${user.name}</strong>,</p>
+
+          <p>
+            We received a request to reset your Tours & Travels password.
+          </p>
+
+          <p>
+            Click the button below to reset your password:
+          </p>
+
+          <p>
+            <a
+              href="${resetLink}"
+              style="
+                display:inline-block;
+                padding:12px 20px;
+                background:#007bff;
+                color:white;
+                text-decoration:none;
+                border-radius:6px;
+              "
+            >
+              Reset Password
+            </a>
+          </p>
+
+          <p>
+            This link is valid for <strong>15 minutes</strong>.
+          </p>
+
+          <p>
+            If you did not request a password reset, please ignore this email.
+          </p>
+
+          <p>
+            Regards,<br>
+            <strong>Tours & Travels Management</strong>
+          </p>
+        </div>
+      `,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset link has been sent to your email.",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to send password reset email.",
+    });
+  }
 };
-
+// Reset password using the email reset link
 exports.resetPassword = async (req, res) => {
-	try {
-		const { token, email, password } = req.body;
-		if (!token || !email || !password) return res.status(400).json({ success: false, message: 'Token, email and new password are required.' });
-		const u = await User.findOne({ email: email.toLowerCase(), resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } });
-		if (!u) return res.status(400).json({ success: false, message: 'Invalid or expired reset token.' });
+  try {
+    const { token, email, password } = req.body;
 
-		// Password validation same as register
-		if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,16}$/.test(password)) return res.status(400).json({ success: false, message: 'Password must be 8-16 chars and include letters, numbers and special characters.' });
+    if (!token || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token, email and new password are required.'
+      });
+    }
 
-		u.password = await bcrypt.hash(password, 12);
-		u.resetPasswordToken = undefined;
-		u.resetPasswordExpires = undefined;
-		await u.save();
-		res.json({ success: true, message: 'Password has been reset. You may now log in with your new password.' });
-	} catch (e) {
-		res.status(500).json({ success: false, message: e.message });
-	}
+    // Same password rules as registration
+    if (
+      !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,16}$/.test(password)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Password must be 8-16 chars and include letters, numbers and special characters.'
+      });
+    }
+
+    const u = await User.findOne({
+      email: String(email).trim().toLowerCase(),
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!u) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired password reset link.'
+      });
+    }
+
+    // Hash new password
+    u.password = await bcrypt.hash(password, 12);
+
+    // Remove used reset token
+    u.resetPasswordToken = undefined;
+    u.resetPasswordExpires = undefined;
+
+    await u.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password reset successfully. You can now log in.'
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to reset password.'
+    });
+  }
 };

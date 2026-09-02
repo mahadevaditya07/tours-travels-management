@@ -57,12 +57,19 @@ export const loginUser = async (data) => {
 };
 
 // Auth helper endpoints for verification / password reset
-export const forgotPassword = async (contact) => {
+export const forgotPassword = async (email) => {
   try {
-    const response = await api.post('/auth/forgot-password', { emailOrPhone: contact });
+    const response = await api.post('/auth/forgot-password', {
+      email
+    });
+
     return response.data;
   } catch (err) {
-    const msg = err?.response?.data?.message || err.message || 'Request failed.';
+    const msg =
+      err?.response?.data?.message ||
+      err.message ||
+      'Request failed.';
+
     throw new Error(msg);
   }
 };
@@ -134,6 +141,8 @@ export const createBooking = async (data) => {
 
   // Return created booking object (normalize id)
   const booking = response.data?.booking || response.data;
+  // attach any debug info (confirmation link) for local testing
+  if (response.data?.debug) booking.debug = response.data.debug;
   if (booking && booking._id && !booking.id) booking.id = booking._id;
   return booking;
 };

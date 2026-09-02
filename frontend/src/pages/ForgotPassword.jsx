@@ -3,17 +3,27 @@ import { forgotPassword } from '../services/api';
 import './AuthShared.css';
 
 export default function ForgotPassword() {
-  const [contact, setContact] = useState('');
+  const [email, setEmail] = useState('');
   const [status, setStatus] = useState(null);
 
-  const submit = async e => {
+  const submit = async (e) => {
     e.preventDefault();
     setStatus(null);
+
     try {
-      const res = await forgotPassword(contact);
-      setStatus({ ok: true, message: res.message || 'If an account matches the provided contact, a reset link has been sent.' });
+      const res = await forgotPassword(email);
+
+      setStatus({
+        ok: true,
+        message:
+          res.message ||
+          'A password reset link has been sent to your email.'
+      });
     } catch (err) {
-      setStatus({ ok: false, message: err.message });
+      setStatus({
+        ok: false,
+        message: err.message || 'Unable to send reset link.'
+      });
     }
   };
 
@@ -21,13 +31,46 @@ export default function ForgotPassword() {
     <div className="auth-page">
       <div className="auth-panel">
         <div className="auth-form">
+
           <h2>Reset password</h2>
-          <p className="muted">Enter your email or phone to receive a reset link.</p>
-          {status && <div className={`notice ${status.ok ? 'success' : 'error'}`}>{status.message}</div>}
+
+          <p className="muted">
+            Enter your registered email to receive a password reset link.
+          </p>
+
+          {status && (
+            <div
+              className={`notice ${
+                status.ok ? 'success' : 'error'
+              }`}
+            >
+              {status.message}
+            </div>
+          )}
+
           <form onSubmit={submit}>
-            <div className="field"><label>Email or phone</label><input value={contact} onChange={e => setContact(e.target.value)} required /></div>
-            <button className="btn btn-primary full">Send reset link</button>
+
+            <div className="field">
+              <label>Email address</label>
+
+              <input
+                type="email"
+                placeholder="Enter your registered email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary full"
+            >
+              Send reset link
+            </button>
+
           </form>
+
         </div>
       </div>
     </div>
