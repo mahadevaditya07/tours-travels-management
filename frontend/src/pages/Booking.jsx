@@ -8,7 +8,7 @@ import "./Booking.css";
 export default function Booking() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const planner = location.state?.planner || { start:"Hubli", destination:"Gokarna", stops:[], members:2, vehicleId:"suv", distance:210, fuelCost:1500 };
   const tour = location.state?.tour || null;
   const vehicle = vehicles.find(v=>v.id===planner.vehicleId) || vehicles[1];
@@ -17,21 +17,22 @@ export default function Booking() {
   const routeStops = Array.isArray(planner.stops) ? planner.stops : [];
   const [date,setDate] = useState(tour?.dates?.[0] || "");
   const [traveler,setTraveler] = useState({ name:user?.name || "", email:user?.email || "", phone:user?.phone || "" });
+  const [members, setMembers] = useState(Number(planner.members || 1));
   const [error,setError] = useState(""); const [saving,setSaving] = useState(false);
 
   // prefer cost calculated by planner (vehicleCost) otherwise compute from distance * per-km rate
   const distanceVal = Number(planner.distance || 0);
   const vehicleCost = Number(planner.vehicleCost || 0) || (distanceVal ? Math.round(distanceVal * vehicle.costPerKm) : 0);
   const additional = 500;
-  const total = (tour?.price || 0) * Number(planner.members || 1) + vehicleCost + additional;
+  const total = (tour?.price || 0) * Number(members || 1) + vehicleCost + additional;
 
   const submit = async e => {
     e.preventDefault(); setError("");
     const maxPassengers = Math.max(0, vehicle.capacity - 1);
-    if (Number(planner.members || 1) > maxPassengers) return setError(`Selected vehicle cannot accommodate all travelers. Max passengers for ${vehicle.name} is ${maxPassengers}.`);
+    if (Number(members || 1) > maxPassengers) return setError(`Selected vehicle cannot accommodate all travelers. Max passengers for ${vehicle.name} is ${maxPassengers}.`);
     setSaving(true);
     try {
-      const booking = await createBooking({ traveler, tourId: tour?.id || null, tour: tour?.title || "Custom trip", start:routeStart, destination:routeDestination, stops:routeStops, date, members:Number(planner.members || 1), vehicle:vehicle.name, distance:Number(planner.distance || 0), basePrice:(planner.basePrice !== undefined ? planner.basePrice : (tour?.price || 0) * Number(planner.members || 1)), vehicleCost, additional, total });
+      const booking = await createBooking({ traveler, tourId: tour?.id || null, tour: tour?.title || "Custom trip", start:routeStart, destination:routeDestination, stops:routeStops, date, members:Number(members || 1), vehicle:vehicle.name, distance:Number(planner.distance || 0), basePrice:(planner.basePrice !== undefined ? planner.basePrice : (tour?.price || 0) * Number(members || 1)), vehicleCost, additional, total });
       // If backend returned a debug confirmation link (dev mode), show it to the user via state
       if (booking?.debug?.confirmationLink) {
         navigate('/my-bookings', { state: { success: `Booking created. Confirmation link: ${booking.debug.confirmationLink}` } });
@@ -54,11 +55,20 @@ export default function Booking() {
         <div><span>Tour</span><strong>{tour?.title || "Custom trip"}</strong></div>
         <div><span>Route</span><strong>{routeStart} → {routeDestination}</strong></div>
         <div><span>Stops</span><strong>{routeStops.length ? routeStops.map(s=>typeof s === "string" ? s : s.name).join(", ") : "No extra stops"}</strong></div>
-        <div><span>Travelers</span><strong>{planner.members || 1}</strong></div>
+        <div><span>Travelers</span><strong>
+            <input type="number" min={1} max={Math.max(1, vehicle.capacity)} value={members} onChange={e=>setMembers(Number(e.target.value) || 1)} style={{width:80}} />
+          </strong></div>
         <div><span>Vehicle</span><strong>{vehicle.name}</strong></div>
         <div><span>Distance</span><strong>{Number(planner.distance || 0)} km</strong></div>
       </div>
-      <button className="btn btn-primary full" disabled={saving}>{saving ? "Confirming booking..." : "Confirm booking →"}</button>
+      {isAuthenticated ? (
+        <button className="btn btn-primary full" disabled={saving}>{saving ? "Confirming booking..." : "Confirm booking →"}</button>
+      ) : (
+        <div style={{display:'grid',gap:8}}>
+          <div className="notice">You must be signed in to confirm a booking.</div>
+          <Link className="btn btn-primary full" to="/login" state={{ from: '/booking', planner: { ...planner, members } }}>Sign in to confirm →</Link>
+        </div>
+      )}
       <p className="muted tiny">By confirming, this frontend creates a development booking. Final pricing and availability should be verified by the backend.</p>
     </form>
     {tour ? (
