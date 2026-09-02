@@ -468,11 +468,14 @@ export default function MapPlanner() {
   // Fuel calculation
   // ------------------------------------------------
 
+  // Vehicle fare (per-km pricing)
+  const vehicleFare = totalDistance
+    ? Math.round(totalDistance * vehicle.costPerKm)
+    : 0;
+
+  // Fuel estimation (legacy display) - kept for informational purposes
   const fuelCost = totalDistance
-    ? Math.ceil(
-        totalDistance /
-          vehicle.mileage
-      ) * 100
+    ? Math.ceil(totalDistance / vehicle.mileage) * 100
     : 0;
 
 
@@ -1191,12 +1194,9 @@ export default function MapPlanner() {
               </div>
 
 
-              {members >
-                vehicle.capacity && (
+              {members > (vehicle.capacity - 1) && (
                 <div className="notice error">
-                  This vehicle cannot
-                  accommodate{" "}
-                  {members} travelers.
+                  This vehicle cannot accommodate {members} travelers. One seat is reserved for the driver; maximum passengers for this vehicle is {vehicle.capacity - 1}.
                 </div>
               )}
 
@@ -1404,6 +1404,11 @@ export default function MapPlanner() {
                 </strong>
               </div>
 
+              <div>
+                <span>Vehicle fare</span>
+                <strong>₹{vehicleFare.toLocaleString('en-IN')}</strong>
+              </div>
+
             </div>
 
           </div>
@@ -1426,61 +1431,46 @@ export default function MapPlanner() {
               BOOKING
           ========================================== */}
 
-          <Link
-            className={`btn btn-primary full ${
-              members >
-              vehicle.capacity
-                ? "disabled"
-                : ""
-            }`}
-            to={
-              members <=
-              vehicle.capacity
-                ? "/booking"
-                : "#"
-            }
-            state={{
-              planner: {
-                start: plannerStart,
+            <Link
+              className={`btn btn-primary full ${
+                members > (vehicle.capacity - 1) ? "disabled" : ""
+              }`}
+              to={members <= (vehicle.capacity - 1) ? "/booking" : "#"}
+              state={{
+                planner: {
+                  start: plannerStart,
 
-                destination:
-                  plannerDestination,
+                  destination: plannerDestination,
 
-                stops,
+                  stops,
 
-                members,
+                  members,
 
-                vehicleId,
+                  vehicleId,
 
-                distance:
-                  Math.round(
-                    totalDistance
-                  ),
+                  distance: Math.round(totalDistance),
 
-                fuelCost,
+                  // pass calculated vehicle fare so booking uses per-km pricing
+                  vehicleCost: vehicleFare,
 
-                selectedRoute:
-                  selectedRoute
+                  fuelCost,
+
+                  selectedRoute: selectedRoute
                     ? {
-                        distance:
-                          selectedRoute.distance,
+                        distance: selectedRoute.distance,
 
-                        duration:
-                          selectedRoute.duration,
+                        duration: selectedRoute.duration,
 
-                        geometry:
-                          selectedRoute.geometry,
+                        geometry: selectedRoute.geometry,
                       }
                     : null,
-              },
+                },
 
-              tour: passTour
-                ? passedTour
-                : undefined,
-            }}
-          >
-            Continue to booking →
-          </Link>
+                tour: passTour ? passedTour : undefined,
+              }}
+            >
+              Continue to booking →
+            </Link>
 
         </aside>
 

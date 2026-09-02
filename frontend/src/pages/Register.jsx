@@ -26,7 +26,7 @@ export default function Register() {
 
     if (form.password !== form.confirmPassword) return setError("Passwords do not match.");
 
-    try { await register(form); navigate("/dashboard"); } catch (err) { setError(err.message); }
+    try { await register(form); navigate("/login", { state: { info: 'registered' } }); } catch (err) { setError(err.message); }
   };
 
   return <div className="auth-page register-page"><div className="auth-art"><span className="eyebrow">Your journey begins</span><h1 className="section-title">Create an account built for travelers.</h1><p>Save trips, manage bookings and build routes tailored to your group.</p></div>

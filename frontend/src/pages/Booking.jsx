@@ -19,14 +19,16 @@ export default function Booking() {
   const [traveler,setTraveler] = useState({ name:user?.name || "", email:user?.email || "", phone:user?.phone || "" });
   const [error,setError] = useState(""); const [saving,setSaving] = useState(false);
 
-  // prefer cost calculated by planner (fuelCost or vehicleCost) if available
-  const vehicleCost = Number(planner.vehicleCost || planner.fuelCost || 0) || Number(planner.distance || 0) * vehicle.costPerKm;
+  // prefer cost calculated by planner (vehicleCost) otherwise compute from distance * per-km rate
+  const distanceVal = Number(planner.distance || 0);
+  const vehicleCost = Number(planner.vehicleCost || 0) || (distanceVal ? Math.round(distanceVal * vehicle.costPerKm) : 0);
   const additional = 500;
   const total = (tour?.price || 0) * Number(planner.members || 1) + vehicleCost + additional;
 
   const submit = async e => {
     e.preventDefault(); setError("");
-    if (Number(planner.members || 1) > vehicle.capacity) return setError("Selected vehicle cannot accommodate all travelers.");
+    const maxPassengers = Math.max(0, vehicle.capacity - 1);
+    if (Number(planner.members || 1) > maxPassengers) return setError(`Selected vehicle cannot accommodate all travelers. Max passengers for ${vehicle.name} is ${maxPassengers}.`);
     setSaving(true);
     try {
       const booking = await createBooking({ traveler, tourId: tour?.id || null, tour: tour?.title || "Custom trip", start:routeStart, destination:routeDestination, stops:routeStops, date, members:Number(planner.members || 1), vehicle:vehicle.name, distance:Number(planner.distance || 0), basePrice:(planner.basePrice !== undefined ? planner.basePrice : (tour?.price || 0) * Number(planner.members || 1)), vehicleCost, additional, total });

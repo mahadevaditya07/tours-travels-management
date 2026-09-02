@@ -13,6 +13,10 @@ import MapPlanner from "./pages/MapPlanner";
 import Booking from "./pages/Booking";
 import MyBookings from "./pages/MyBookings";
 import Profile from "./pages/Profile";
+import VerifyAccount from "./pages/VerifyAccount";
+import ConfirmBooking from "./pages/ConfirmBooking";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import "./App.css";
 
 function App() {
@@ -24,6 +28,10 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-account" element={<VerifyAccount />} />
+          <Route path="/confirm-booking" element={<ConfirmBooking />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/map-planner" element={<MapPlanner />} />

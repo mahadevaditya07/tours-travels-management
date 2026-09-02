@@ -30,7 +30,7 @@ export default function Login() {
       <form onSubmit={submit} autoComplete="off">
         <div className="field"><label>Email</label><input type="email" autoComplete="off" required value={form.email} onChange={e => setForm({...form,email:e.target.value})} placeholder="you@example.com" /></div>
         <div className="field"><label>Password</label><div className="password-wrap"><input type={show ? "text" : "password"} autoComplete="new-password" required value={form.password} onChange={e => setForm({...form,password:e.target.value})} placeholder="••••••••" /><button type="button" onClick={() => setShow(v=>!v)}>{show ? "Hide" : "Show"}</button></div></div>
-        <div className="form-row"><label className="remember"><input type="checkbox" /> Remember me</label><button type="button" className="link-button">Forgot password?</button></div>
+        <div className="form-row"><label className="remember"><input type="checkbox" /> Remember me</label><button type="button" className="link-button" onClick={() => navigate('/forgot-password')}>Forgot password?</button></div>
         <button className="btn btn-primary full" disabled={loading}>{loading ? "Signing in..." : "Sign in →"}</button>
       </form>
       <p className="auth-switch">Don't have an account? <Link to="/register">Create one</Link></p>

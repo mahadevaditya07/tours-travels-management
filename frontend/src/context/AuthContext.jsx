@@ -37,10 +37,8 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const res = await registerUser(data);
-      if (!res || !res.token) throw new Error(res?.message || "Registration failed.");
-      localStorage.setItem("token", res.token);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
-      setUser(res.user);
+      // Backend no longer auto-logs-in; registration returns success message.
+      if (!res || !res.success) throw new Error(res?.message || "Registration failed.");
     } finally {
       setLoading(false);
     }

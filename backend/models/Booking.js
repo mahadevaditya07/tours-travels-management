@@ -19,7 +19,10 @@ const s=new mongoose.Schema({
 	vehicleCost: Number,
 	additionalCharges: Number,
 	totalPrice: { type: Number, required: true },
-	status: { type: String, enum: ['Pending','Confirmed','Completed','Cancelled'], default: 'Pending' }
+	status: { type: String, enum: ['Pending','Confirmed','Completed','Cancelled'], default: 'Pending' },
+    // Confirmation token for verifying email/phone after booking
+    confirmationToken: String,
+    confirmationExpires: Date
 },{ timestamps: true });
 
 module.exports = mongoose.model('Booking', s);

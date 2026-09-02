@@ -56,6 +56,37 @@ export const loginUser = async (data) => {
   }
 };
 
+// Auth helper endpoints for verification / password reset
+export const forgotPassword = async (contact) => {
+  try {
+    const response = await api.post('/auth/forgot-password', { emailOrPhone: contact });
+    return response.data;
+  } catch (err) {
+    const msg = err?.response?.data?.message || err.message || 'Request failed.';
+    throw new Error(msg);
+  }
+};
+
+export const resetPassword = async (payload) => {
+  try {
+    const response = await api.post('/auth/reset-password', payload);
+    return response.data;
+  } catch (err) {
+    const msg = err?.response?.data?.message || err.message || 'Request failed.';
+    throw new Error(msg);
+  }
+};
+
+export const verifyAccount = async (payload) => {
+  try {
+    const response = await api.post('/auth/verify-account', payload);
+    return response.data;
+  } catch (err) {
+    const msg = err?.response?.data?.message || err.message || 'Request failed.';
+    throw new Error(msg);
+  }
+};
+
 // ==================== TOURS ====================
 
 export const getTours = async () => {
@@ -120,6 +151,11 @@ export const cancelBooking = async (id) => {
   const booking = response.data?.booking || response.data;
   if (booking && booking._id && !booking.id) booking.id = booking._id;
   return booking;
+};
+
+export const confirmBooking = async (bookingId, token) => {
+  const response = await api.post(`/bookings/${bookingId}/confirm`, { token });
+  return response.data;
 };
 
 // ==================== USER ====================

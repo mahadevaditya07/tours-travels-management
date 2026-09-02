@@ -13,10 +13,11 @@ export const tours = [
 ];
 
 export const vehicles = [
-  { id: "car", name: "Sedan", capacity: 4, mileage: 16, costPerKm: 9, description: "Comfortable for small groups." },
-  { id: "suv", name: "SUV", capacity: 7, mileage: 14, costPerKm: 12, description: "Extra space for families and luggage." },
-  { id: "tempo", name: "Tempo Traveller", capacity: 12, mileage: 10, costPerKm: 16, description: "Ideal for medium-sized groups." },
-  { id: "bus", name: "Mini Bus", capacity: 25, mileage: 7, costPerKm: 24, description: "Best for larger groups." }
+  // costPerKm updated to new pricing rules
+  { id: "car", name: "Sedan", capacity: 4, mileage: 16, costPerKm: 15, description: "Comfortable for small groups." },
+  { id: "suv", name: "SUV", capacity: 7, mileage: 14, costPerKm: 16, description: "Extra space for families and luggage." },
+  { id: "tempo", name: "Tempo Traveller", capacity: 12, mileage: 10, costPerKm: 18, description: "Ideal for medium-sized groups." },
+  { id: "bus", name: "Mini Bus", capacity: 25, mileage: 7, costPerKm: 23, description: "Best for larger groups." }
 ];
 
 export const locations = {
