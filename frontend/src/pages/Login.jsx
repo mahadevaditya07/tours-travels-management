@@ -19,8 +19,13 @@ export default function Login() {
 
   const submit = async e => {
     e.preventDefault(); setError("");
-    try { await login(form); navigate(location.state?.from || "/dashboard"); }
-    catch (err) { setError(err.message); }
+    try {
+      const user = await login(form);
+      const destination = user?.role === 'admin' ? '/admin' : (location.state?.from || '/dashboard');
+      navigate(destination);
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return <div className="auth-page"><div className="auth-art"><span className="eyebrow">Welcome back</span><h1 className="section-title">Keep exploring.</h1><p>Pick up where you left off and continue planning your next escape.</p></div>

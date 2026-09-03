@@ -2,6 +2,60 @@ const Booking = require('../models/Booking');
 const Tour = require('../models/Tour');
 const crypto = require('crypto');
 
+const buildBookingDetailsText = (booking) => {
+  return [
+    `Booking ID: ${booking.bookingId}`,
+    `Tour: ${booking.tourName || 'Custom trip'}`,
+    `Travel Date: ${new Date(booking.travelDate).toLocaleDateString()}`,
+    `From: ${booking.startLocation}`,
+    `To: ${booking.destination}`,
+    `Passengers: ${booking.members}`,
+    `Total Price: ₹${Number(booking.totalPrice || 0).toLocaleString('en-IN')}`,
+    `Status: Cancelled`,
+  ].join('\n');
+};
+
+const sendCancellationNotification = async (booking) => {
+  if (!booking || !booking.email) return;
+
+  const detailText = buildBookingDetailsText(booking);
+  const detailHtml = `
+    <div style="font-family: Arial, sans-serif; padding: 20px; color: #111827;">
+      <h2 style="margin-bottom: 12px;">Booking Cancelled</h2>
+      <p>Your booking has been cancelled successfully.</p>
+      <p><strong>Booking details:</strong></p>
+      <ul>
+        <li><strong>Booking ID:</strong> ${booking.bookingId}</li>
+        <li><strong>Tour:</strong> ${booking.tourName || 'Custom trip'}</li>
+        <li><strong>Travel Date:</strong> ${new Date(booking.travelDate).toLocaleDateString()}</li>
+        <li><strong>From:</strong> ${booking.startLocation}</li>
+        <li><strong>To:</strong> ${booking.destination}</li>
+        <li><strong>Passengers:</strong> ${booking.members}</li>
+        <li><strong>Total Price:</strong> ₹${Number(booking.totalPrice || 0).toLocaleString('en-IN')}</li>
+      </ul>
+    </div>
+  `;
+
+  try {
+    const mailer = require('../utils/mailer');
+    await mailer.sendEmail({
+      to: booking.email,
+      subject: 'Your booking has been cancelled',
+      text: `Your booking has been cancelled.\n\n${detailText}`,
+      html: detailHtml,
+    });
+
+    if (booking.phone && process.env.TWILIO_ACCOUNT_SID) {
+      await mailer.sendSms({
+        to: booking.phone,
+        body: `Your booking has been cancelled. ${booking.tourName || 'Trip'} on ${new Date(booking.travelDate).toLocaleDateString()}. Booking ID: ${booking.bookingId}`,
+      });
+    }
+  } catch (err) {
+    console.log('Failed sending booking cancellation notification:', err.message || err);
+  }
+};
+
 exports.createBooking = async (req, res) => {
   try {
     const b = req.body;
@@ -153,11 +207,14 @@ exports.cancelBooking = async (req, res) => {
     if (!b) return res.status(404).json({ success: false, message: 'Booking not found.' });
     b.status = 'Cancelled';
     await b.save();
-    res.json({ success: true, message: 'Booking cancelled.', booking: b });
+    await sendCancellationNotification(b);
+    res.json({ success: true, message: 'Booking cancelled. A cancellation notice with details has been sent to your email/phone.', booking: b });
   } catch (e) {
     res.status(400).json({ success: false, message: e.message });
   }
 };
+
+exports.sendCancellationNotification = sendCancellationNotification;
 
 exports.confirmBooking = async (req, res) => {
   try {

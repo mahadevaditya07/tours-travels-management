@@ -1,0 +1,355 @@
+.admin-page {
+  position: relative;
+  padding-top: 32px;
+  padding-bottom: 48px;
+  min-height: calc(100vh - 150px);
+  animation: adminFadeIn 0.6s ease-out;
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 24%),
+    radial-gradient(circle at top right, rgba(45, 212, 191, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(7, 17, 31, 0.95), rgba(11, 18, 32, 0.98));
+  border-radius: 28px;
+}
+
+.admin-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), transparent 35%, rgba(34, 197, 94, 0.08));
+  pointer-events: none;
+}
+
+.admin-header,
+.admin-grid,
+.admin-panel,
+.admin-stat-card,
+.admin-price-item,
+.admin-table-wrap {
+  position: relative;
+  z-index: 1;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 64, 175, 0.9));
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 24px;
+  padding: 24px 24px 18px;
+  margin-bottom: 24px;
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.22);
+  position: relative;
+  overflow: hidden;
+  animation: headerGlow 6s ease-in-out infinite alternate;
+}
+
+.admin-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(96, 165, 250, 0.18), transparent 40%, rgba(34, 197, 94, 0.14));
+  pointer-events: none;
+}
+
+.admin-header::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  right: -30px;
+  top: -40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(125, 211, 252, 0.25), transparent 65%);
+  pointer-events: none;
+}
+
+.admin-header-content,
+.admin-pill {
+  position: relative;
+  z-index: 1;
+}
+
+.admin-header-content {
+  color: #f8fafc;
+}
+
+.admin-badge {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.18);
+  border: 1px solid rgba(191, 219, 254, 0.4);
+  color: #dbeafe;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.admin-header h1 {
+  margin: 10px 0 6px;
+  color: #ffffff;
+}
+
+.admin-header p {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.9);
+}
+
+.admin-pill {
+  min-width: 170px;
+  text-align: center;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 14px 16px;
+  color: #f8fafc;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.admin-pill strong {
+  display: block;
+  font-size: 1.7rem;
+  margin-top: 6px;
+  color: #dbeafe;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.admin-stat-card {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.76));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-left: 4px solid rgba(96, 165, 250, 0.8);
+  border-radius: 20px;
+  padding: 18px 18px 14px;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  animation: cardFloat 0.55s ease both;
+  overflow: hidden;
+}
+
+.admin-stat-card:nth-child(2) {
+  border-left-color: rgba(45, 212, 191, 0.8);
+}
+
+.admin-stat-card:nth-child(3) {
+  border-left-color: rgba(250, 204, 21, 0.8);
+}
+
+.admin-stat-card:nth-child(4) {
+  border-left-color: rgba(244, 63, 94, 0.8);
+}
+
+.admin-stat-card:hover,
+.admin-panel:hover,
+.admin-price-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.22);
+}
+
+.admin-stat-card span {
+  font-size: 12px;
+  color: #cbd5e1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.admin-stat-card strong {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 2.1rem;
+  color: #f8fafc;
+}
+
+.admin-stat-card small {
+  color: #a5b4cf;
+}
+
+.admin-panel {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.7));
+  border: 1px solid rgba(148, 163, 184, 0.17);
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+  margin-bottom: 24px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  animation: adminFadeIn 0.7s ease both;
+  backdrop-filter: blur(8px);
+}
+
+.admin-panel h2 {
+  margin: 0 0 18px;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+}
+
+.admin-price-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 16px;
+  padding: 16px 18px;
+  background: rgba(15, 23, 42, 0.5);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.admin-price-meta strong {
+  display: block;
+  color: #f8fafc;
+  margin-bottom: 4px;
+}
+
+.admin-price-meta span {
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.admin-price-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-price-controls label {
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.admin-price-controls input {
+  width: 120px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.7);
+  color: #f8fafc;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-price-controls input:focus {
+  outline: none;
+  border-color: rgba(96, 165, 250, 0.9);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  border-radius: 16px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.admin-table th {
+  color: #cbd5e1;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.admin-table td {
+  color: #f8fafc;
+}
+
+.admin-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(148, 163, 184, 0.06);
+}
+
+.admin-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(96, 165, 250, 0.16);
+  color: #bfdbfe;
+}
+
+.admin-status.cancelled {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+}
+
+.admin-status.pending {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fcd34d;
+}
+
+.admin-status.confirmed {
+  background: rgba(34, 197, 94, 0.12);
+  color: #a7f3d0;
+}
+
+@keyframes adminFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardFloat {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes headerGlow {
+  from {
+    box-shadow: 0 18px 35px rgba(15, 23, 42, 0.22), 0 0 0 rgba(59, 130, 246, 0.1);
+  }
+  to {
+    box-shadow: 0 18px 35px rgba(15, 23, 42, 0.22), 0 0 32px rgba(96, 165, 250, 0.16);
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-price-item {
+    align-items: flex-start;
+  }
+}

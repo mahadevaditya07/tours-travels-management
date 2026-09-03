@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const bcrypt = require("bcryptjs");
 const connectDB = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
@@ -9,6 +10,7 @@ const tourRoutes = require("./routes/tourRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const userRoutes = require("./routes/userRoutes");
 const vehicleRoutes = require("./routes/vehicleRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -37,9 +39,34 @@ app.use("/api/tours", tourRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/vehicles", vehicleRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Seed vehicle data if not present
 const Vehicle = require('./models/Vehicle');
+const User = require('./models/User');
+
+const seedAdminAccount = async () => {
+  try {
+    const email = (process.env.ADMIN_EMAIL || 'admin@tours.com').toLowerCase();
+    const password = process.env.ADMIN_PASSWORD || 'Admin@123';
+    const existing = await User.findOne({ role: 'admin' });
+
+    if (!existing) {
+      await User.create({
+        name: 'System Admin',
+        email,
+        password: await bcrypt.hash(password, 12),
+        phone: '9999999999',
+        role: 'admin',
+        isVerified: true,
+      });
+      console.log(`Seeded admin account: ${email} / ${password}`);
+    }
+  } catch (e) {
+    console.error('Admin seed failed', e.message || e);
+  }
+};
+
 const seedVehicles = async () => {
   try {
     const count = await Vehicle.countDocuments();
@@ -59,6 +86,7 @@ const seedVehicles = async () => {
 };
 
 seedVehicles();
+seedAdminAccount();
 
 app.use((req, res) => {
   res.status(404).json({

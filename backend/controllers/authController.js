@@ -10,7 +10,8 @@ const safeUser = u => ({ id: u._id, name: u.name, email: u.email, phone: u.phone
 
 exports.register = async (req, res) => {
 	try {
-		const { name, email, password, phone } = req.body;
+		const { name, email, password, phone, role } = req.body;
+		if (role === 'admin') return res.status(403).json({ success: false, message: 'Admin account creation is not allowed.' });
 		if (!name || !email || !password) return res.status(400).json({ success: false, message: 'Name, email and password are required.' });
 
 		// Password: 8-16 chars, letters, number, special char

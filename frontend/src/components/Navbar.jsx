@@ -7,6 +7,7 @@ export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const isAdmin = user?.role === 'admin';
 
   const nav = [
     ["Home", "/"],
@@ -20,10 +21,18 @@ export default function Navbar() {
     navigate("/");
   };
 
+  const jumpToAdminSection = (id) => {
+    setOpen(false);
+    navigate('/admin');
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  };
+
   return (
     <header className="navbar">
       <div className="nav-inner">
-        <Link className="brand" to="/">
+        <Link className="brand" to={isAdmin ? "/admin" : "/"}>
           <span className="brand-mark">T</span>
           <span>Tours & Travels Management</span>
         </Link>
@@ -33,7 +42,7 @@ export default function Navbar() {
         </button>
 
         <nav className={`nav-links ${open ? "open" : ""}`}>
-          {nav.map(([label, path]) => (
+          {!isAdmin && nav.map(([label, path]) => (
             <NavLink key={path} to={path} onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>
               {label}
             </NavLink>
@@ -41,9 +50,20 @@ export default function Navbar() {
 
           {isAuthenticated ? (
             <>
-              <NavLink to="/dashboard" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Dashboard</NavLink>
-              <NavLink to="/my-bookings" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Bookings</NavLink>
-              <NavLink to="/profile" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Profile</NavLink>
+              {isAdmin ? (
+                <>
+                  <NavLink to="/admin" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Admin Dashboard</NavLink>
+                  <button type="button" className="nav-user" onClick={() => jumpToAdminSection('admin-users')}>Users</button>
+                  <button type="button" className="nav-user" onClick={() => jumpToAdminSection('admin-pricing')}>Pricing</button>
+                  <button type="button" className="nav-user" onClick={() => jumpToAdminSection('admin-bookings')}>Bookings</button>
+                </>
+              ) : (
+                <>
+                  <NavLink to="/dashboard" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Dashboard</NavLink>
+                  <NavLink to="/my-bookings" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Bookings</NavLink>
+                  <NavLink to="/profile" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Profile</NavLink>
+                </>
+              )}
               <button className="nav-user" onClick={handleLogout}>{user?.name?.split(" ")[0] || "Logout"} · Logout</button>
             </>
           ) : (

@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import FloatingLogo from "./components/FloatingLogo";
@@ -17,7 +18,14 @@ import VerifyAccount from "./pages/VerifyAccount";
 import ConfirmBooking from "./pages/ConfirmBooking";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import AdminDashboard from "./pages/AdminDashboard";
 import "./App.css";
+
+function PublicRoute({ children }) {
+  const { user, isAuthenticated } = useAuth();
+  if (isAuthenticated && user?.role === 'admin') return <Navigate to="/admin" replace />;
+  return children;
+}
 
 function App() {
   return (
@@ -25,12 +33,12 @@ function App() {
       <Navbar />
       <main>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/verify-account" element={<VerifyAccount />} />
+          <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
+          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+          <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+          <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+          <Route path="/verify-account" element={<PublicRoute><VerifyAccount /></PublicRoute>} />
           <Route path="/confirm-booking" element={<ConfirmBooking />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
@@ -38,9 +46,10 @@ function App() {
             <Route path="/booking" element={<Booking />} />
             <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/admin" element={<AdminDashboard />} />
           </Route>
-          <Route path="/tours" element={<Tours />} />
-          <Route path="/tours/:id" element={<TourDetails />} />
+          <Route path="/tours" element={<PublicRoute><Tours /></PublicRoute>} />
+          <Route path="/tours/:id" element={<PublicRoute><TourDetails /></PublicRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

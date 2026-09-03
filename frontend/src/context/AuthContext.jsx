@@ -15,8 +15,13 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    else localStorage.removeItem(STORAGE_KEY);
+    if (user) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('user');
+    }
   }, [user]);
 
   const login = async ({ email, password }) => {
@@ -27,7 +32,9 @@ export function AuthProvider({ children }) {
       if (!res || !res.token) throw new Error(res?.message || "Login failed.");
       localStorage.setItem("token", res.token);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
+      localStorage.setItem('user', JSON.stringify(res.user));
       setUser(res.user);
+      return res.user;
     } finally {
       setLoading(false);
     }
@@ -83,6 +90,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('user');
     localStorage.removeItem("token");
     setUser(null);
   };

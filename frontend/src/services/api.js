@@ -42,11 +42,15 @@ export const loginUser = async (data) => {
     console.log("LOGIN RESPONSE:", response.data);
 
     if (response.data.token) {
+      localStorage.removeItem("token");
       localStorage.setItem("token", response.data.token);
     }
 
     if (response.data.user) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("tours_user");
       localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("tours_user", JSON.stringify(response.data.user));
     }
 
     return response.data;
@@ -155,11 +159,36 @@ export const getMyBookings = async () => {
   return bookings.map(b => ({ ...b, id: b.id || b._id, total: b.total || b.totalPrice }));
 };
 
+export const getAdminDashboard = async () => {
+  const response = await api.get('/admin/dashboard');
+  return response.data;
+};
+
+export const getAdminUsers = async () => {
+  const response = await api.get('/admin/users');
+  return response.data;
+};
+
+export const getAdminBookings = async () => {
+  const response = await api.get('/admin/bookings');
+  return response.data;
+};
+
+export const updateVehiclePricing = async (vehicleId, costPerKm) => {
+  const response = await api.put(`/admin/pricing/${vehicleId}`, { costPerKm });
+  return response.data;
+};
+
 export const cancelBooking = async (id) => {
   const response = await api.put(`/bookings/${id}/cancel`);
   const booking = response.data?.booking || response.data;
   if (booking && booking._id && !booking.id) booking.id = booking._id;
   return booking;
+};
+
+export const cancelBookingAdmin = async (id) => {
+  const response = await api.put(`/admin/bookings/${id}/cancel`);
+  return response.data;
 };
 
 export const confirmBooking = async (bookingId, token) => {
