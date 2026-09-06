@@ -186,6 +186,29 @@
   backdrop-filter: blur(8px);
 }
 
+.admin-panel::after,
+.admin-stat-card::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(90deg, rgba(96,165,250,0.9), rgba(34,197,94,0.85), rgba(236,72,153,0.8));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  animation: neonEdge 1.6s ease forwards;
+}
+
+@keyframes neonEdge {
+  0% { opacity: 0; transform: translateY(6px) scale(0.98); filter: blur(8px); }
+  60% { opacity: 0.8; transform: translateY(0) scale(1); filter: blur(4px); }
+  100% { opacity: 0.6; transform: translateY(0) scale(1); filter: blur(2px); }
+}
+
 .admin-panel h2 {
   margin: 0 0 18px;
   color: #f8fafc;

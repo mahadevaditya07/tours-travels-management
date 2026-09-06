@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import FloatingLogo from "./components/FloatingLogo";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { ToastProvider } from "./context/ToastContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -19,6 +20,7 @@ import ConfirmBooking from "./pages/ConfirmBooking";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AdminDashboard from "./pages/AdminDashboard";
+import SavedExperiences from "./pages/SavedExperiences";
 import "./App.css";
 
 function PublicRoute({ children }) {
@@ -29,6 +31,7 @@ function PublicRoute({ children }) {
 
 function App() {
   return (
+    <ToastProvider>
     <div className="app">
       <Navbar />
       <main>
@@ -47,6 +50,7 @@ function App() {
             <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/saved-experiences" element={<SavedExperiences />} />
           </Route>
           <Route path="/tours" element={<PublicRoute><Tours /></PublicRoute>} />
           <Route path="/tours/:id" element={<PublicRoute><TourDetails /></PublicRoute>} />
@@ -56,6 +60,7 @@ function App() {
       <Footer />
       <FloatingLogo />
     </div>
+    </ToastProvider>
   );
 }
 

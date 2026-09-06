@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { tours } from "../data/mockData";
 import "./TourDetails.css";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 export default function TourDetails() {
   const { id } = useParams();
@@ -20,8 +21,14 @@ export default function TourDetails() {
 
 function AuthSave(){
   const { saveExperience } = useAuth();
+  const toast = useToast();
   const onSave = async () => {
-    try{ await saveExperience(); alert('Saved experience.'); }catch(e){ alert(e.message||'Save failed.'); }
+    try {
+      await saveExperience();
+      toast?.showToast('Saved experience', { type: 'success' });
+    } catch (e) {
+      toast?.showToast(e.message || 'Save failed.', { type: 'error' });
+    }
   };
   return <button className="btn btn-outline full" onClick={onSave} style={{marginTop:12}}>Save experience</button>;
 }

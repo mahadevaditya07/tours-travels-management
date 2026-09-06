@@ -14,12 +14,12 @@ export default function Dashboard() {
       <div className="dashboard-main">
         <div className="stats-grid">
           <div className="stat-card-lg card"><span>Upcoming trips</span><strong>{upcoming.length}</strong><small>Keep exploring</small></div>
-          <div className="stat-card-lg card"><span>Saved experiences</span><strong>{user?.savedExperience ?? 12}</strong><small>Curated for you</small></div>
-          <div className="stat-card-lg card"><span>Traveler rating</span><strong>{user?.rating?.toFixed ? user.rating.toFixed(1) : (user?.rating ?? 4.9)}</strong><small>Average experience</small></div>
+          <div className="stat-card-lg card"><span>Saved experiences</span><strong>{user?.savedExperience ?? 0}</strong><small>Curated for you</small></div>
+          <div className="stat-card-lg card"><span>Traveler rating</span><strong>{user?.rating?.toFixed ? user.rating.toFixed(1) : (user?.rating ?? 0)}</strong><small>Average experience</small></div>
         </div>
         <div className="card dash-panel">
           <div className="section-head"><div><span className="eyebrow">Quick actions</span><h2>What are you planning?</h2></div></div>
-          <div className="quick-actions"><Link to="/map-planner" className="quick-card"><span>⌁</span><strong>Plan a trip</strong><small>Build a custom route</small></Link><Link to="/tours" className="quick-card"><span>✦</span><strong>Explore tours</strong><small>Find curated packages</small></Link><Link to="/my-bookings" className="quick-card"><span>▣</span><strong>My bookings</strong><small>Manage reservations</small></Link></div>
+          <div className="quick-actions"><Link to="/map-planner" className="quick-card"><span>⌁</span><strong>Plan a trip</strong><small>Build a custom route</small></Link><Link to="/tours" className="quick-card"><span>✦</span><strong>Explore tours</strong><small>Find curated packages</small></Link><Link to="/my-bookings" className="quick-card"><span>▣</span><strong>My bookings</strong><small>Manage reservations</small></Link><Link to="/saved-experiences" className="quick-card"><span>❤</span><strong>Saved experiences</strong><small>View your saved trips</small></Link></div>
         </div>
         <div className="dash-panel">
           <div className="section-head"><div><span className="eyebrow">For you</span><h2>Recommended tours</h2></div><Link to="/tours">View all →</Link></div>

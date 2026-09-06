@@ -6,6 +6,7 @@ const Booking = require('../models/Booking');
 const Vehicle = require('../models/Vehicle');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 const { sendCancellationNotification } = require('../controllers/bookingController');
+const mailer = require('../utils/mailer');
 
 router.use(protect);
 router.use(adminOnly);
@@ -43,6 +44,31 @@ router.get('/users', async (req, res) => {
   try {
     const users = await User.find().select('-password').sort({ createdAt: -1 });
     res.json({ success: true, users });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+    // Notify the user by email that their account was deleted by an admin
+    try {
+      if (user.email) {
+        await mailer.sendEmail({
+          to: user.email,
+          subject: 'Your account has been deleted',
+          text: `Hello ${user.name || ''},\n\nYour account has been deleted by an administrator. If you believe this is a mistake, please contact support.`,
+          html: `<div style="font-family: Arial, sans-serif; padding:12px;"><h3>Your account was deleted</h3><p>Hello ${user.name || ''},</p><p>Your account has been deleted by an administrator. If you believe this is a mistake, please contact support.</p></div>`
+        });
+      }
+    } catch (err) {
+      console.log('Failed sending account deletion email:', err.message || err);
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'User deleted.' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

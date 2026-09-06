@@ -10,7 +10,8 @@ const api = axios.create({
 // Automatically attach JWT token if available
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    // Prefer sessionStorage (per-tab sessions). Fall back to localStorage if present.
+    const token = sessionStorage.getItem("token") || localStorage.getItem("token");
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -42,15 +43,16 @@ export const loginUser = async (data) => {
     console.log("LOGIN RESPONSE:", response.data);
 
     if (response.data.token) {
-      localStorage.removeItem("token");
-      localStorage.setItem("token", response.data.token);
+      // Store in sessionStorage so each tab can have its own session
+      sessionStorage.removeItem("token");
+      sessionStorage.setItem("token", response.data.token);
     }
 
     if (response.data.user) {
-      localStorage.removeItem("user");
-      localStorage.removeItem("tours_user");
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      localStorage.setItem("tours_user", JSON.stringify(response.data.user));
+      sessionStorage.removeItem("user");
+      sessionStorage.removeItem("tours_user");
+      sessionStorage.setItem("user", JSON.stringify(response.data.user));
+      sessionStorage.setItem("tours_user", JSON.stringify(response.data.user));
     }
 
     return response.data;
@@ -114,6 +116,11 @@ export const getTourById = async (id) => {
   return response.data;
 };
 
+export const updateTour = async (id, data) => {
+  const response = await api.put(`/tours/${id}`, data);
+  return response.data;
+};
+
 // ==================== BOOKINGS ====================
 
 export const createBooking = async (data) => {
@@ -171,6 +178,11 @@ export const getAdminUsers = async () => {
 
 export const getAdminBookings = async () => {
   const response = await api.get('/admin/bookings');
+  return response.data;
+};
+
+export const deleteAdminUser = async (id) => {
+  const response = await api.delete(`/admin/users/${id}`);
   return response.data;
 };
 

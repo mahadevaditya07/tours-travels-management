@@ -7,8 +7,8 @@ const STORAGE_KEY = "tours_user";
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
-      // Support legacy `user` key if `tours_user` is not present
-      const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('user');
+      // Use sessionStorage so each tab can hold a separate logged-in user
+      const stored = sessionStorage.getItem(STORAGE_KEY) || sessionStorage.getItem('user');
       return stored ? JSON.parse(stored) : null;
     } catch { return null; }
   });
@@ -16,11 +16,11 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-      localStorage.setItem('user', JSON.stringify(user));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      sessionStorage.setItem('user', JSON.stringify(user));
     } else {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem('user');
+      sessionStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem('user');
     }
   }, [user]);
 
@@ -30,9 +30,10 @@ export function AuthProvider({ children }) {
       if (!email || !password) throw new Error("Email and password are required.");
       const res = await loginUser({ email, password });
       if (!res || !res.token) throw new Error(res?.message || "Login failed.");
-      localStorage.setItem("token", res.token);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
-      localStorage.setItem('user', JSON.stringify(res.user));
+      // Store token and user in sessionStorage so each tab keeps its own session
+      sessionStorage.setItem("token", res.token);
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
+      sessionStorage.setItem('user', JSON.stringify(res.user));
       setUser(res.user);
       return res.user;
     } finally {
@@ -56,7 +57,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await apiUpdateProfile(data);
       if (!res || !res.user) throw new Error(res?.message || 'Update failed.');
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
       setUser(res.user);
       return res.user;
     } finally {
@@ -69,7 +70,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await apiSaveExperience();
       if (res?.user) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
         setUser(res.user);
       }
       return res;
@@ -81,7 +82,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await apiAddRating(rating);
       if (res?.user) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
         setUser(res.user);
       }
       return res;
@@ -89,9 +90,9 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem('user');
-    localStorage.removeItem("token");
+    sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem("token");
     setUser(null);
   };
 

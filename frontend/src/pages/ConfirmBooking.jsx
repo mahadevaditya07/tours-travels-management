@@ -14,9 +14,9 @@ export default function ConfirmBooking() {
   const isValidLink = useMemo(() => Boolean(token && bookingId), [token, bookingId]);
 
   useEffect(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('tours_user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('tours_user');
   }, []);
 
   const handleConfirm = async () => {

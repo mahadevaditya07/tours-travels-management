@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import "./Profile.css";
 
 export default function Profile() {
@@ -7,6 +8,7 @@ export default function Profile() {
   const [form,setForm] = useState({name:user?.name||"",email:user?.email||"",phone:user?.phone||""});
   const [saved,setSaved] = useState(false);
   const [error,setError] = useState("");
+  const toast = useToast();
   const save = async e => {
     e.preventDefault(); setError("");
     if (!/^[A-Za-z\s]+$/.test(form.name)) return setError("Name must contain only letters and spaces.");
@@ -14,6 +16,7 @@ export default function Profile() {
     try {
       await updateProfile(form);
       setSaved(true); setTimeout(()=>setSaved(false),2000);
+      toast?.showToast('Profile updated', { type: 'success' });
     } catch (err) { setError(err.message || err.toString()); }
   };
   return <div className="page"><div className="container page-title-wrap"><span className="eyebrow">Your account</span><h1 className="section-title">Profile settings.</h1><p className="muted">Keep your traveler information up to date.</p></div>

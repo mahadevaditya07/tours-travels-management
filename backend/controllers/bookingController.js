@@ -174,6 +174,47 @@ exports.createBooking = async (req, res) => {
       console.log('Booking confirmation send failed, fallback link:', link, err.message || err);
     }
 
+    // Notify admin about the new booking (if ADMIN_EMAIL configured)
+    try {
+      const mailer = require('../utils/mailer');
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+      if (adminEmail) {
+        const adminText = [
+          `New booking received`,
+          `User: ${x.name} <${x.email}>`,
+          `Phone: ${x.phone}`,
+          `Booking ID: ${x.bookingId}`,
+          `Tour: ${x.tourName || 'Custom trip'}`,
+          `Travel Date: ${new Date(x.travelDate).toLocaleDateString()}`,
+          `From: ${x.startLocation}`,
+          `To: ${x.destination}`,
+          `Passengers: ${x.members}`,
+          `Total Price: ₹${Number(x.totalPrice || 0).toLocaleString('en-IN')}`
+        ].join('\n');
+
+        const adminHtml = `
+          <div style="font-family: Arial, sans-serif; padding:12px; color:#111827;">
+            <h3>New booking received</h3>
+            <ul>
+              <li><strong>User:</strong> ${x.name} &lt;${x.email}&gt;</li>
+              <li><strong>Phone:</strong> ${x.phone}</li>
+              <li><strong>Booking ID:</strong> ${x.bookingId}</li>
+              <li><strong>Tour:</strong> ${x.tourName || 'Custom trip'}</li>
+              <li><strong>Travel Date:</strong> ${new Date(x.travelDate).toLocaleDateString()}</li>
+              <li><strong>From:</strong> ${x.startLocation}</li>
+              <li><strong>To:</strong> ${x.destination}</li>
+              <li><strong>Passengers:</strong> ${x.members}</li>
+              <li><strong>Total Price:</strong> ₹${Number(x.totalPrice || 0).toLocaleString('en-IN')}</li>
+            </ul>
+          </div>
+        `;
+
+        await mailer.sendEmail({ to: adminEmail, subject: 'New booking placed', text: adminText, html: adminHtml });
+      }
+    } catch (err) {
+      console.log('Failed sending admin booking notification:', err.message || err);
+    }
+
     console.log('Booking confirmation link (debug):', link);
 
     const mailerConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER);

@@ -1,28 +1,48 @@
 const nodemailer = require('nodemailer');
 const twilio = require('twilio');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  }
-});
+let transporter;
+
+if (process.env.SMTP_HOST) {
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587,
+    secure: process.env.SMTP_SECURE === 'true' || false,
+    auth: process.env.SMTP_USER && process.env.SMTP_PASS ? {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    } : undefined
+  });
+} else {
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+}
 
 const sendEmail = async ({ to, subject, text, html }) => {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    throw new Error(
-      'Gmail SMTP credentials are missing in backend/.env'
-    );
-  }
+  if (!transporter) throw new Error('Mailer transporter not configured');
 
-  return await transporter.sendMail({
-    from: `"Tours & Travels Management" <${process.env.SMTP_USER}>`,
+  const info = await transporter.sendMail({
+    from: `"Tours & Travels Management" <${process.env.SMTP_USER || 'no-reply@example.com'}>`,
     to,
     subject,
     text,
     html
   });
+
+  // If this was an Ethereal test account, log the preview URL for debugging
+  try {
+    const preview = nodemailer.getTestMessageUrl(info);
+    if (preview) console.log('Ethereal preview URL:', preview);
+  } catch (e) {
+    // ignore
+  }
+
+  return info;
 };
 
 const sendSms = async ({ to, body }) => {

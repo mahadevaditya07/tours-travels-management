@@ -7,9 +7,9 @@ const s = new mongoose.Schema({
 	phone: { type: String, default: '' },
 	role: { type: String, enum: ['user', 'admin'], default: 'user' },
 	avatar: { type: String, default: '' },
-	rating: { type: Number, default: 4.9 },
+	rating: { type: Number, default: 0 },
 	ratingCount: { type: Number, default: 0 },
-	savedExperience: { type: Number, default: 12 },
+	savedExperience: { type: Number, default: 0 },
 	// Verification / password reset fields
 	isVerified: { type: Boolean, default: false },
 	verificationToken: String,

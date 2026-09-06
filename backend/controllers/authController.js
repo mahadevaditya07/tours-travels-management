@@ -22,7 +22,34 @@ exports.register = async (req, res) => {
 		// Create user and mark verified immediately (no verification required)
 		const u = await User.create({ name, email: email.toLowerCase(), password: await bcrypt.hash(password, 12), phone, isVerified: true });
 
-		res.status(201).json({ success: true, message: 'Registration successful. You may now log in.' });
+      // Notify admin about new user registration (if ADMIN_EMAIL or SMTP_USER configured)
+      try {
+        const mailer = require('../utils/mailer');
+        const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+        if (adminEmail) {
+          const text = [
+            `New user registered`,
+            `Name: ${u.name}`,
+            `Email: ${u.email}`,
+            `Phone: ${u.phone || 'N/A'}`
+          ].join('\n');
+          const html = `
+            <div style="font-family: Arial, sans-serif; padding:12px; color:#111827;">
+              <h3>New user registered</h3>
+              <ul>
+                <li><strong>Name:</strong> ${u.name}</li>
+                <li><strong>Email:</strong> ${u.email}</li>
+                <li><strong>Phone:</strong> ${u.phone || 'N/A'}</li>
+              </ul>
+            </div>
+          `;
+          await mailer.sendEmail({ to: adminEmail, subject: 'New user registration', text, html });
+        }
+      } catch (err) {
+        console.log('Failed sending admin new user notification:', err.message || err);
+      }
+
+      res.status(201).json({ success: true, message: 'Registration successful. You may now log in.' });
 	} catch (e) {
 		res.status(500).json({ success: false, message: e.message });
 	}
