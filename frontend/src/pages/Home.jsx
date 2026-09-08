@@ -1,12 +1,26 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import DestinationCard from "../components/DestinationCard";
 import TourCard from "../components/TourCard";
-import { destinations, tours } from "../data/mockData";
+import { destinations, tours as mockTours } from "../data/mockData";
+import { getTours } from "../services/api";
 import "./Home.css";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
+  const [toursList, setToursList] = useState(mockTours);
+
+  useEffect(() => {
+    let isMounted = true;
+    getTours().then(data => {
+      const list = Array.isArray(data) ? data : (data?.tours || []);
+      if (isMounted && list.length > 0) {
+        setToursList(list);
+      }
+    }).catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
   return (
     <>
       <section className="hero">
@@ -49,7 +63,7 @@ export default function Home() {
       <section className="section tours-section">
         <div className="container">
           <div className="section-head"><div><span className="eyebrow">Curated escapes</span><h2 className="section-title">Made for memorable trips</h2></div><Link className="btn btn-secondary" to="/tours">Explore tours →</Link></div>
-          <div className="grid two-col">{tours.slice(0,4).map(t => <TourCard key={t.id} tour={t} />)}</div>
+          <div className="grid two-col">{toursList.slice(0,4).map(t => <TourCard key={t.id || t._id} tour={t} />)}</div>
         </div>
       </section>
 

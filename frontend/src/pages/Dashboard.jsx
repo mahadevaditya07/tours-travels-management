@@ -23,7 +23,7 @@ export default function Dashboard() {
         </div>
         <div className="dash-panel">
           <div className="section-head"><div><span className="eyebrow">For you</span><h2>Recommended tours</h2></div><Link to="/tours">View all →</Link></div>
-          <div className="grid two-col">{tours.slice(0,2).map(t => <Link className="mini-tour card" key={t.id} to={`/tours/${t.id}`}><img src={t.image} alt={t.title}/><div><span>{t.destination}</span><h3>{t.title}</h3><strong>₹{t.price.toLocaleString("en-IN")}</strong></div></Link>)}</div>
+          <div className="grid two-col">{tours.slice(0,2).map(t => <Link className="mini-tour card" key={t.id || t._id} to={`/tours/${t.id || t._id}`}><img src={t.image} alt={t.title}/><div><span>{t.destination}</span><h3>{t.title}</h3><strong>₹{(t.price || 0).toLocaleString("en-IN")}</strong></div></Link>)}</div>
         </div>
       </div>
       <aside className="dashboard-side card">

@@ -164,7 +164,7 @@ export default function AdminDashboard() {
               </div>
               <div className="admin-price-controls">
                 <label htmlFor={`price-${vehicle._id}`}>Price/km</label>
-                <input id={`price-${vehicle._id}`} type="number" min="1" step="1" defaultValue={vehicle.costPerKm} />
+                <input key={`${vehicle._id}-${vehicle.costPerKm}`} id={`price-${vehicle._id}`} type="number" min="1" step="1" defaultValue={vehicle.costPerKm} />
                 <button className="btn btn-primary" type="button" onClick={() => handlePriceUpdate(vehicle._id)} disabled={savingVehicleId === vehicle._id}>
                   {savingVehicleId === vehicle._id ? 'Saving...' : 'Update'}
                 </button>
@@ -185,12 +185,12 @@ export default function AdminDashboard() {
               </div>
               <div className="admin-price-controls">
                 <label htmlFor={`tour-price-${t._id || t.id}`}>Package Price</label>
-                <input id={`tour-price-${t._id || t.id}`} type="number" min="1" step="1" defaultValue={t.price} />
+                <input key={`price-${t._id || t.id}-${t.price}`} id={`tour-price-${t._id || t.id}`} type="number" min="1" step="1" defaultValue={t.price} />
                 <button className="btn btn-primary" type="button" onClick={() => handleTourPriceUpdate(t._id || t.id)} disabled={savingTourId === (t._id || t.id)}>
                   {savingTourId === (t._id || t.id) ? 'Saving...' : 'Update'}
                 </button>
                 <label htmlFor={`tour-perperson-${t._id || t.id}`}>Price / person</label>
-                <input id={`tour-perperson-${t._id || t.id}`} type="number" min="1" step="1" defaultValue={t.pricePerPerson ?? t.price} />
+                <input key={`perperson-${t._id || t.id}-${t.pricePerPerson ?? t.price}`} id={`tour-perperson-${t._id || t.id}`} type="number" min="1" step="1" defaultValue={t.pricePerPerson ?? t.price} />
                 <button className="btn btn-secondary" type="button" onClick={() => handleTourPerPersonUpdate(t._id || t.id)} disabled={savingTourId === (t._id || t.id)}>
                   {savingTourId === (t._id || t.id) ? 'Saving...' : 'Update per-person'}
                 </button>

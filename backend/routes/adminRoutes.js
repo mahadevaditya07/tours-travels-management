@@ -92,7 +92,10 @@ router.put('/pricing/:vehicleId', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Price per kilometer must be a valid positive number.' });
     }
 
-    const vehicle = await Vehicle.findById(req.params.vehicleId);
+    let vehicle = await Vehicle.findById(req.params.vehicleId).catch(() => null);
+    if (!vehicle) {
+      vehicle = await Vehicle.findOne({ id: req.params.vehicleId });
+    }
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Vehicle not found.' });
     }

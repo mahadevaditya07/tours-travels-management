@@ -14,8 +14,9 @@ import L from "leaflet";
 
 import {
   attractions,
-  vehicles,
+  vehicles as mockVehicles,
 } from "../data/mockData";
+import { getVehicles } from "../services/api";
 
 import {
   buildLocationSearchQueries,
@@ -375,6 +376,21 @@ export default function MapPlanner() {
   const [vehicleId, setVehicleId] =
     useState("suv");
 
+  const [vehicleList, setVehicleList] =
+    useState(mockVehicles);
+
+  useEffect(() => {
+    let isMounted = true;
+    getVehicles().then((data) => {
+      if (isMounted && data && data.length > 0) {
+        setVehicleList(data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
 
   // ----------------------------------------------
   // Routing state
@@ -459,9 +475,9 @@ export default function MapPlanner() {
   // ------------------------------------------------
 
   const vehicle =
-    vehicles.find(
-      (v) => v.id === vehicleId
-    ) || vehicles[0];
+    vehicleList.find(
+      (v) => v.id === vehicleId || v._id === vehicleId
+    ) || vehicleList[0];
 
 
   // ------------------------------------------------
@@ -1177,11 +1193,11 @@ export default function MapPlanner() {
                       )
                     }
                   >
-                    {vehicles.map(
+                    {vehicleList.map(
                       (v) => (
                         <option
-                          key={v.id}
-                          value={v.id}
+                          key={v.id || v._id}
+                          value={v.id || v._id}
                         >
                           {v.name} ·{" "}
                           {v.capacity} seats

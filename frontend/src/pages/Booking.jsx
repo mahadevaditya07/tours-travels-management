@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { createBooking } from "../services/api";
-import { tours, vehicles } from "../data/mockData";
+import { createBooking, getVehicles } from "../services/api";
+import { tours, vehicles as mockVehicles } from "../data/mockData";
 import "./Booking.css";
 
 export default function Booking() {
@@ -11,18 +11,41 @@ export default function Booking() {
   const { user, isAuthenticated } = useAuth();
   const planner = location.state?.planner || { start:"Hubli", destination:"Gokarna", stops:[], members:2, vehicleId:"suv", distance:210, fuelCost:1500 };
   const tour = location.state?.tour || null;
-  const vehicle = vehicles.find(v=>v.id===planner.vehicleId) || vehicles[1];
+
+  const [vehicleList, setVehicleList] = useState(mockVehicles);
+
+  useEffect(() => {
+    let isMounted = true;
+    getVehicles().then(data => {
+      if (isMounted && data && data.length > 0) {
+        setVehicleList(data);
+      }
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  const vehicle = vehicleList.find(v => v.id === planner.vehicleId || v._id === planner.vehicleId) || vehicleList[1] || vehicleList[0];
   const routeStart = typeof planner.start === "string" ? planner.start : planner.start?.name || "Hubli";
   const routeDestination = typeof planner.destination === "string" ? planner.destination : planner.destination?.name || "Gokarna";
   const routeStops = Array.isArray(planner.stops) ? planner.stops : [];
-  const [date,setDate] = useState(tour?.dates?.[0] || "");
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minDateStr = tomorrow.toISOString().split("T")[0];
+
+  const [date, setDate] = useState(() => {
+    if (tour?.dates?.length) {
+      const upcoming = tour.dates.find(d => d >= minDateStr);
+      if (upcoming) return upcoming;
+    }
+    return minDateStr;
+  });
   const [traveler,setTraveler] = useState({ name:user?.name || "", email:user?.email || "", phone:user?.phone || "" });
   const [members, setMembers] = useState(Number(planner.members || 1));
   const [error,setError] = useState(""); const [saving,setSaving] = useState(false);
 
-  // prefer cost calculated by planner (vehicleCost) otherwise compute from distance * per-km rate
+  // recalculate vehicleCost based on live vehicle costPerKm if distance available
   const distanceVal = Number(planner.distance || 0);
-  const vehicleCost = Number(planner.vehicleCost || 0) || (distanceVal ? Math.round(distanceVal * vehicle.costPerKm) : 0);
+  const vehicleCost = distanceVal ? Math.round(distanceVal * vehicle.costPerKm) : (Number(planner.vehicleCost || 0));
   const additional = 500;
   const total = (tour?.price || 0) * Number(members || 1) + vehicleCost + additional;
 
@@ -48,7 +71,7 @@ export default function Booking() {
         <div className="field"><label>Name</label><input required value={traveler.name} onChange={e=>setTraveler({...traveler,name:e.target.value})}/></div>
         <div className="field"><label>Email</label><input required type="email" value={traveler.email} onChange={e=>setTraveler({...traveler,email:e.target.value})}/></div>
         <div className="field"><label>Phone</label><input required value={traveler.phone} onChange={e=>setTraveler({...traveler,phone:e.target.value})}/></div>
-        <div className="field"><label>Travel date</label>{tour ? <select required value={date} onChange={e=>setDate(e.target.value)}>{(tour.dates || []).map(d=><option key={d} value={d}>{new Date(d).toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})}</option>)}</select> : <input required type="date" value={date} onChange={e=>setDate(e.target.value)} />}</div>
+        <div className="field"><label htmlFor="travel-date">Travel date</label><input id="travel-date" required type="date" min={minDateStr} value={date} onChange={e=>setDate(e.target.value)} style={{colorScheme:'dark'}}/></div>
       </div>
       <h2>Trip information</h2>
       <div className="trip-summary">

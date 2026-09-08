@@ -186,6 +186,16 @@ export const deleteAdminUser = async (id) => {
   return response.data;
 };
 
+export const getVehicles = async () => {
+  try {
+    const response = await api.get('/vehicles');
+    return response.data?.vehicles || [];
+  } catch (err) {
+    console.error('Failed to fetch vehicles from backend:', err);
+    return null;
+  }
+};
+
 export const updateVehiclePricing = async (vehicleId, costPerKm) => {
   const response = await api.put(`/admin/pricing/${vehicleId}`, { costPerKm });
   return response.data;

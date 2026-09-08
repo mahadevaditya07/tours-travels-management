@@ -62,7 +62,7 @@ export default function TourCard({ tour }) {
           </div>
         )}
 
-        <Link className="btn btn-secondary tour-btn" to={`/tours/${tour.id}`}>View Details →</Link>
+        <Link className="btn btn-secondary tour-btn" to={`/tours/${tour.id || tour._id}`}>View Details →</Link>
       </div>
     </article>
   );
