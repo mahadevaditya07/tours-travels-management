@@ -88,7 +88,7 @@ const seedVehicles = async () => {
         { upsert: true }
       );
     }
-    console.log('Seeded vehicles into DB');
+
   } catch (e) {
     console.error('Vehicle seed failed', e.message || e);
   }
@@ -117,7 +117,6 @@ const seedTours = async () => {
         { upsert: true }
       );
     }
-    console.log('Seeded tours into DB');
   } catch (e) {
     console.error('Tour seed failed', e.message || e);
   }
