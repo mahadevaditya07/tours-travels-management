@@ -244,7 +244,10 @@ exports.getMyBookings = async (req, res) => {
 
 exports.cancelBooking = async (req, res) => {
   try {
-    const b = await Booking.findOne({ _id: req.params.id, user: req.user._id });
+    let b = await Booking.findOne({ _id: req.params.id, user: req.user._id }).catch(() => null);
+    if (!b) {
+      b = await Booking.findOne({ bookingId: req.params.id, user: req.user._id });
+    }
     if (!b) return res.status(404).json({ success: false, message: 'Booking not found.' });
     b.status = 'Cancelled';
     await b.save();

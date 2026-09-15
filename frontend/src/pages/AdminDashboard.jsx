@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [savingVehicleId, setSavingVehicleId] = useState("");
   const [toursList, setToursList] = useState([]);
   const [savingTourId, setSavingTourId] = useState("");
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
   const fetchDashboard = async () => {
     try {
@@ -116,6 +117,21 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleTourDatesUpdate = async (tourId, newDates) => {
+    try {
+      setSavingTourId(tourId);
+      setError("");
+      await updateTour(tourId, { availableDates: newDates, dates: newDates });
+      setToursList(prev => prev.map(t => (t._id === tourId || t.id === tourId) ? { ...t, availableDates: newDates, dates: newDates } : t));
+      toast?.showToast('Tour available dates updated', { type: 'success' });
+    } catch (err) {
+      setError(err.message || "Failed to update tour dates.");
+      toast?.showToast(err.message || 'Failed to update tour dates', { type: 'error' });
+    } finally {
+      setSavingTourId("");
+    }
+  };
+
   const handleDeleteUser = async (userId) => {
     if (!confirm('Delete user? This action cannot be undone.')) return;
     try {
@@ -195,6 +211,83 @@ export default function AdminDashboard() {
                   {savingTourId === (t._id || t.id) ? 'Saving...' : 'Update per-person'}
                 </button>
               </div>
+
+              <div style={{ gridColumn: '1 / -1', marginTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <strong style={{ fontSize: '0.85rem', color: 'var(--primary-2, #62e6d0)' }}>Available Dates</strong>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                  {(() => {
+                    const todayTime = new Date().setHours(0, 0, 0, 0);
+                    const currentList = Array.isArray(t.availableDates) && t.availableDates.length ? t.availableDates : (Array.isArray(t.dates) ? t.dates : []);
+                    const futureList = currentList.filter(dStr => {
+                      try {
+                        const d = new Date(dStr);
+                        d.setHours(0, 0, 0, 0);
+                        return d.getTime() > todayTime;
+                      } catch { return false; }
+                    });
+                    return futureList.map((dStr, idx) => {
+                      let formatted = dStr;
+                      try { formatted = new Date(dStr).toISOString().split('T')[0]; } catch {}
+                      return (
+                        <span key={idx} style={{ background: 'rgba(255,255,255,0.08)', padding: '4px 10px', borderRadius: 8, fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          {formatted}
+                          <button
+                            type="button"
+                            style={{ background: 'none', border: 'none', color: '#ff6b7a', cursor: 'pointer', padding: 0, fontWeight: 'bold' }}
+                            onClick={() => {
+                              const nextList = futureList.filter((_, i) => i !== idx);
+                              handleTourDatesUpdate(t._id || t.id, nextList);
+                            }}
+                          >✕</button>
+                        </span>
+                      );
+                    });
+                  })()}
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  {(() => {
+                    const tmrw = new Date();
+                    tmrw.setDate(tmrw.getDate() + 1);
+                    const minDateVal = tmrw.toISOString().split("T")[0];
+                    return (
+                      <>
+                        <input type="date" id={`add-date-${t._id || t.id}`} min={minDateVal} style={{ width: 150, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)', background: '#0a1726', color: '#fff', colorScheme: 'dark' }} />
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                          onClick={() => {
+                            const input = document.getElementById(`add-date-${t._id || t.id}`);
+                            const val = input?.value;
+                            if (!val) return alert('Select a valid date to add.');
+                            
+                            const selectedD = new Date(val);
+                            selectedD.setHours(0, 0, 0, 0);
+                            const nowD = new Date();
+                            nowD.setHours(0, 0, 0, 0);
+                            if (selectedD.getTime() <= nowD.getTime()) {
+                              return alert('Available date must be greater than today\'s date.');
+                            }
+
+                            const rawList = Array.isArray(t.availableDates) && t.availableDates.length ? t.availableDates : (Array.isArray(t.dates) ? t.dates : []);
+                            const formattedList = rawList.map(d => {
+                              try { return new Date(d).toISOString().split('T')[0]; } catch { return String(d); }
+                            });
+                            if (formattedList.includes(val)) return alert('Date already added.');
+                            const nextList = [...formattedList, val];
+                            handleTourDatesUpdate(t._id || t.id, nextList);
+                            if (input) input.value = '';
+                          }}
+                        >
+                          + Add Date
+                        </button>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -258,7 +351,8 @@ export default function AdminDashboard() {
                       {booking.status}
                     </span>
                   </td>
-                  <td>
+                  <td style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <button className="btn btn-outline" type="button" onClick={() => setSelectedBooking(booking)}>Details</button>
                     {booking.status !== 'Cancelled' && (
                       <button className="btn btn-secondary" type="button" onClick={() => handleCancelBooking(booking._id)}>Cancel</button>
                     )}
@@ -269,6 +363,121 @@ export default function AdminDashboard() {
           </table>
         </div>
       </div>
+
+      {/* Admin Booking Details Modal */}
+      {selectedBooking && (
+        <div className="modal-backdrop" onClick={() => setSelectedBooking(null)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Booking Details (Admin)</h2>
+              <button className="modal-close" onClick={() => setSelectedBooking(null)}>✕</button>
+            </div>
+
+            <div className="modal-grid">
+              <div className="modal-field">
+                <label>Booking ID</label>
+                <strong>{selectedBooking.bookingId || selectedBooking._id}</strong>
+              </div>
+
+              <div className="modal-field">
+                <label>Status</label>
+                <span className={`admin-status ${String(selectedBooking.status).toLowerCase()}`} style={{ display: 'inline-block', width: 'fit-content' }}>
+                  {selectedBooking.status}
+                </span>
+              </div>
+
+              <div className="modal-field modal-full">
+                <label>Package / Tour</label>
+                <strong>{selectedBooking.tourName || 'Custom trip'}</strong>
+              </div>
+
+              <div className="modal-field">
+                <label>Travel Date</label>
+                <strong>{selectedBooking.travelDate ? new Date(selectedBooking.travelDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</strong>
+              </div>
+
+              <div className="modal-field">
+                <label>Travelers</label>
+                <strong>{selectedBooking.members} passenger(s)</strong>
+              </div>
+
+              <div className="modal-divider" />
+
+              <div className="modal-field">
+                <label>From</label>
+                <strong>{selectedBooking.startLocation || 'N/A'}</strong>
+              </div>
+
+              <div className="modal-field">
+                <label>Destination</label>
+                <strong>{selectedBooking.destination || 'N/A'}</strong>
+              </div>
+
+              {Array.isArray(selectedBooking.stops) && selectedBooking.stops.length > 0 && (
+                <div className="modal-field modal-full">
+                  <label>Intermediate Stops</label>
+                  <strong>{selectedBooking.stops.map(s => typeof s === 'string' ? s : s.name).join(', ')}</strong>
+                </div>
+              )}
+
+              <div className="modal-field">
+                <label>Vehicle</label>
+                <strong>{selectedBooking.vehicle}</strong>
+              </div>
+
+              <div className="modal-field">
+                <label>Distance</label>
+                <strong>{selectedBooking.distance ? `${selectedBooking.distance} km` : 'N/A'}</strong>
+              </div>
+
+              <div className="modal-divider" />
+
+              <div className="modal-field">
+                <label>Customer Name</label>
+                <strong>{selectedBooking.name}</strong>
+              </div>
+
+              <div className="modal-field">
+                <label>Phone</label>
+                <strong>{selectedBooking.phone || 'N/A'}</strong>
+              </div>
+
+              <div className="modal-field modal-full">
+                <label>Email</label>
+                <strong>{selectedBooking.email}</strong>
+              </div>
+
+              <div className="modal-divider" />
+
+              <div className="modal-field">
+                <label>Base Tour Cost</label>
+                <strong>₹{Number(selectedBooking.basePrice || 0).toLocaleString('en-IN')}</strong>
+              </div>
+
+              <div className="modal-field">
+                <label>Vehicle Cost</label>
+                <strong>₹{Number(selectedBooking.vehicleCost || 0).toLocaleString('en-IN')}</strong>
+              </div>
+
+              <div className="modal-field modal-full">
+                <label>Total Price</label>
+                <strong style={{ fontSize: '1.2rem', color: '#23c4a8' }}>
+                  ₹{Number(selectedBooking.totalPrice || 0).toLocaleString('en-IN')}
+                </strong>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              {selectedBooking.status !== 'Cancelled' && (
+                <button className="btn btn-secondary" type="button" onClick={() => { handleCancelBooking(selectedBooking._id); setSelectedBooking(null); }}>
+                  Cancel Booking
+                </button>
+              )}
+              <button className="btn btn-primary" type="button" onClick={() => setSelectedBooking(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

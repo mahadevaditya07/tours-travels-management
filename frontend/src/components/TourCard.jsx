@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { updateTour } from "../services/api";
 import { useToast } from "../context/ToastContext";
@@ -12,6 +12,11 @@ export default function TourCard({ tour }) {
   const [inputPrice, setInputPrice] = useState(tour.price);
   const [saving, setSaving] = useState(false);
   const toast = useToast();
+
+  useEffect(() => {
+    setLocalPrice(tour.price);
+    setInputPrice(tour.price);
+  }, [tour.price, tour.id, tour._id]);
 
   const onSavePrice = async () => {
     const value = Number(inputPrice);

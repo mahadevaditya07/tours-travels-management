@@ -9,9 +9,171 @@
 .booking-info strong { margin-top:4px; }
 .status { padding:7px 9px; border-radius:9px; font-size:.68rem; text-transform:capitalize; background:rgba(35,196,168,.09); color:#9ceee2; }
 .status.cancelled { color:#ff9da8; background:rgba(255,107,122,.09); }
-.booking-actions { display:flex; gap:7px; }
+.booking-actions { display:flex; gap:9px; flex-wrap:wrap; }
+
+.booking-actions .btn {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 0.85rem;
+}
+
+.booking-actions .btn-outline {
+  color: var(--primary-2, #62e6d0);
+  border: 1px solid rgba(98, 230, 208, 0.25);
+  background: rgba(98, 230, 208, 0.05);
+}
+
+.booking-actions .btn-outline:hover {
+  background: linear-gradient(135deg, rgba(98, 230, 208, 0.2), rgba(35, 196, 168, 0.25));
+  border-color: var(--primary-2, #62e6d0);
+  box-shadow: 0 8px 24px rgba(35, 196, 168, 0.3);
+  transform: translateY(-2px);
+  color: #fff;
+}
+
+.booking-actions .btn-danger {
+  background: rgba(255, 107, 122, 0.1);
+  color: #ff9aa5;
+  border: 1px solid rgba(255, 107, 122, 0.25);
+}
+
+.booking-actions .btn-danger:hover {
+  background: linear-gradient(135deg, rgba(255, 107, 122, 0.25), rgba(220, 38, 38, 0.3));
+  border-color: #ff6b7a;
+  box-shadow: 0 8px 24px rgba(255, 107, 122, 0.35);
+  transform: translateY(-2px);
+  color: #fff;
+}
+
+.booking-actions .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
 
 @media (max-width: 950px) {
   .booking-item { grid-template-columns:1fr 1fr; }
 }
-/* Booking history styles are included in App.css for this generated starter. */
+
+/* Modal styles for View Details matching website theme */
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(4, 11, 22, 0.84);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: backdropFadeIn 0.25s ease both;
+}
+
+.modal-card {
+  background: linear-gradient(145deg, rgba(16, 34, 57, 0.96), rgba(7, 17, 31, 0.98));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: var(--radius, 22px);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: #f7fafc;
+  animation: modalPopIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalPopIn {
+  from { opacity: 0; transform: scale(0.92) translateY(24px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.09));
+  padding-bottom: 16px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.modal-close {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--muted, #94a7bd);
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  transform: scale(1.05);
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.modal-field label {
+  font-size: 0.74rem;
+  color: var(--primary-2, #62e6d0);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  margin: 0;
+}
+
+.modal-field strong {
+  font-size: 0.98rem;
+  color: #fff;
+  word-break: break-word;
+  font-weight: 600;
+}
+
+.modal-full {
+  grid-column: 1 / -1;
+}
+
+.modal-divider {
+  grid-column: 1 / -1;
+  height: 1px;
+  background: var(--border, rgba(255, 255, 255, 0.09));
+  margin: 8px 0;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.09));
+}
