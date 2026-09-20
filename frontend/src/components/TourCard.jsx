@@ -52,6 +52,11 @@ export default function TourCard({ tour }) {
             ₹{(localPrice || 0).toLocaleString("en-IN")}
           </strong>
         </div>
+        {tour.vehicle && (
+          <div style={{ fontSize: '0.82rem', color: '#62e6d0', marginTop: 4, fontWeight: 500 }}>
+            🚗 {tour.vehicle}
+          </div>
+        )}
 
         {isAdmin && (
           <div style={{ margin: '10px 0 12px', display: 'flex', gap: 8, alignItems: 'center' }}>

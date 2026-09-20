@@ -11,6 +11,7 @@ const s = new mongoose.Schema(
 		// price per person (separate from package price)
 		pricePerPerson: { type: Number, default: function () { return this.price; } },
 		category: String,
+		vehicle: { type: String, default: '' },
 		rating: { type: Number, default: 4.5 },
 		image: String,
 		places: [String],

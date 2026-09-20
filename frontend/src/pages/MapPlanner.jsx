@@ -391,6 +391,15 @@ export default function MapPlanner() {
     };
   }, []);
 
+  useEffect(() => {
+    if (passedTour?.vehicle && vehicleList.length > 0) {
+      const match = vehicleList.find(v => v.name === passedTour.vehicle || v.id === passedTour.vehicle || v._id === passedTour.vehicle);
+      if (match) {
+        setVehicleId(match.id || match._id);
+      }
+    }
+  }, [passedTour?.vehicle, vehicleList]);
+
 
   // ----------------------------------------------
   // Routing state

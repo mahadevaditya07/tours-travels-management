@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import "./Tours.css";
 import TourCard from "../components/TourCard";
 import SearchBar from "../components/SearchBar";
@@ -6,11 +7,20 @@ import { tours as mockTours } from "../data/mockData";
 import { getTours } from "../services/api";
 
 export default function Tours() {
+  const [searchParams] = useSearchParams();
+  const initialSearch = searchParams.get("search") || searchParams.get("destination") || "";
   const [toursList, setToursList] = useState(mockTours);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialSearch);
   const [category, setCategory] = useState("All");
   const [maxPrice, setMaxPrice] = useState(50000);
   const [sort, setSort] = useState("featured");
+
+  useEffect(() => {
+    const s = searchParams.get("search") || searchParams.get("destination");
+    if (s !== null) {
+      setQuery(s);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let isMounted = true;

@@ -20,6 +20,10 @@ import ConfirmBooking from "./pages/ConfirmBooking";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminBookings from "./pages/AdminBookings";
+import AdminPricing from "./pages/AdminPricing";
+import AdminTours from "./pages/AdminTours";
 import SavedExperiences from "./pages/SavedExperiences";
 import "./App.css";
 
@@ -50,6 +54,10 @@ function App() {
             <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/bookings" element={<AdminBookings />} />
+            <Route path="/admin/pricing" element={<AdminPricing />} />
+            <Route path="/admin/tours" element={<AdminTours />} />
             <Route path="/saved-experiences" element={<SavedExperiences />} />
           </Route>
           <Route path="/tours" element={<PublicRoute><Tours /></PublicRoute>} />

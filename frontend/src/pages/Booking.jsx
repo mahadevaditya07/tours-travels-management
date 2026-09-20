@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { createBooking, getVehicles } from "../services/api";
+import { createBooking, getVehicles, getTourById } from "../services/api";
 import { tours, vehicles as mockVehicles } from "../data/mockData";
 import "./Booking.css";
 
@@ -10,15 +10,29 @@ export default function Booking() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
 
-  const tour = location.state?.tour || null;
+  const passedTour = location.state?.tour || null;
+  const [tour, setTour] = useState(passedTour);
   const hasCustomPlanner = Boolean(location.state?.planner);
+
+  useEffect(() => {
+    let isMounted = true;
+    const tourId = passedTour?.id || passedTour?._id;
+    if (tourId) {
+      getTourById(tourId).then(res => {
+        if (isMounted && res?.tour) {
+          setTour(res.tour);
+        }
+      }).catch(() => {});
+    }
+    return () => { isMounted = false; };
+  }, [passedTour?.id, passedTour?._id]);
 
   const planner = location.state?.planner || (tour ? {
     start: "Hubli",
     destination: tour.destination?.split(",")[0] || "Gokarna",
     stops: [],
     members: 1,
-    vehicleId: "car",
+    vehicleId: "",
     distance: 0,
     vehicleCost: 0
   } : {
@@ -32,6 +46,7 @@ export default function Booking() {
   });
 
   const [vehicleList, setVehicleList] = useState(mockVehicles);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(location.state?.planner?.vehicleId || "");
 
   useEffect(() => {
     let isMounted = true;
@@ -43,7 +58,41 @@ export default function Booking() {
     return () => { isMounted = false; };
   }, []);
 
-  const vehicle = vehicleList.find(v => v.id === planner.vehicleId || v._id === planner.vehicleId) || vehicleList[1] || vehicleList[0];
+  const vehicle = useMemo(() => {
+    // 1. For fixed tour package bookings, prioritize tour.vehicle assigned by Admin
+    if (!hasCustomPlanner && tour?.vehicle) {
+      const matchTourVehicle = vehicleList.find(
+        v => v.name === tour.vehicle || v.id === tour.vehicle || v._id === tour.vehicle
+      );
+      if (matchTourVehicle) return matchTourVehicle;
+    }
+
+    // 2. If user selected a vehicle (e.g. from Map Planner or custom selection)
+    if (selectedVehicleId) {
+      const match = vehicleList.find(
+        v => v.id === selectedVehicleId || v._id === selectedVehicleId || v.name === selectedVehicleId
+      );
+      if (match) return match;
+    }
+
+    // 3. Fallback for custom planner
+    if (hasCustomPlanner && planner?.vehicleId) {
+      const matchPlannerVehicle = vehicleList.find(
+        v => v.id === planner.vehicleId || v._id === planner.vehicleId || v.name === planner.vehicleId
+      );
+      if (matchPlannerVehicle) return matchPlannerVehicle;
+    }
+
+    // 4. Default to matching tour.vehicle or first vehicle
+    if (tour?.vehicle) {
+      const matchTourVehicle = vehicleList.find(
+        v => v.name === tour.vehicle || v.id === tour.vehicle || v._id === tour.vehicle
+      );
+      if (matchTourVehicle) return matchTourVehicle;
+    }
+
+    return vehicleList[0];
+  }, [hasCustomPlanner, tour?.vehicle, selectedVehicleId, planner?.vehicleId, vehicleList]);
   const routeStart = tour ? "Hubli" : (typeof planner.start === "string" ? planner.start : planner.start?.name || "Hubli");
   const routeDestination = typeof planner.destination === "string" ? planner.destination : planner.destination?.name || "Gokarna";
   const routeStops = Array.isArray(planner.stops) ? planner.stops : [];
@@ -144,7 +193,24 @@ export default function Booking() {
         <div><span>Travelers</span><strong>
             <input type="number" min={1} max={Math.max(1, vehicle.capacity)} value={members} onChange={e=>setMembers(Number(e.target.value) || 1)} style={{width:80}} />
           </strong></div>
-        <div><span>Vehicle</span><strong>{vehicle.name}</strong></div>
+        <div>
+          <span>Vehicle</span>
+          {hasCustomPlanner ? (
+            <select
+              value={vehicle.id || vehicle._id || vehicle.name}
+              onChange={e => setSelectedVehicleId(e.target.value)}
+              style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)', background: '#0a1726', color: '#fff', fontSize: '0.88rem' }}
+            >
+              {vehicleList.map(v => (
+                <option key={v._id || v.id} value={v.id || v._id || v.name}>
+                  {v.name} ({v.capacity} seats, ₹{v.costPerKm}/km)
+                </option>
+              ))}
+            </select>
+          ) : (
+            <strong>{vehicle.name}</strong>
+          )}
+        </div>
         <div><span>Distance</span><strong>{Number(planner.distance || 0)} km</strong></div>
       </div>
       {isAuthenticated ? (

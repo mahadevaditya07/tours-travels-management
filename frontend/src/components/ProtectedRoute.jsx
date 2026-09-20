@@ -8,6 +8,6 @@ export default function ProtectedRoute() {
 
   if (loading) return <Loading text="Checking your session..." />;
   if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
-  if (user?.role === 'admin' && location.pathname !== '/admin') return <Navigate to="/admin" replace />;
+  if (user?.role === 'admin' && !location.pathname.startsWith('/admin')) return <Navigate to="/admin" replace />;
   return <Outlet />;
 }

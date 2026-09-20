@@ -52,10 +52,11 @@ export default function Navbar() {
             <>
               {isAdmin ? (
                 <>
-                  <NavLink to="/admin" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Admin Dashboard</NavLink>
-                  <button type="button" className="nav-user" onClick={() => jumpToAdminSection('admin-users')}>Users</button>
-                  <button type="button" className="nav-user" onClick={() => jumpToAdminSection('admin-pricing')}>Pricing</button>
-                  <button type="button" className="nav-user" onClick={() => jumpToAdminSection('admin-bookings')}>Bookings</button>
+                  <NavLink to="/admin" end onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Dashboard</NavLink>
+                  <NavLink to="/admin/bookings" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Bookings</NavLink>
+                  <NavLink to="/admin/pricing" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Pricing</NavLink>
+                  <NavLink to="/admin/tours" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Tours</NavLink>
+                  <NavLink to="/admin/users" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Users</NavLink>
                 </>
               ) : (
                 <>

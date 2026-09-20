@@ -12,8 +12,8 @@ describe('Booking API', () => {
     process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
     // Load app after setting MONGO_URI
     app = require('../server');
-    // wait a moment for DB seed
-    await new Promise(r => setTimeout(r, 500));
+    // wait for DB seed to finish
+    await new Promise(r => setTimeout(r, 1500));
   }, 20000);
 
   afterAll(async () => {
