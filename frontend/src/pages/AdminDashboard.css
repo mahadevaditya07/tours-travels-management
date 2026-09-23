@@ -197,8 +197,8 @@
   border-radius: inherit;
   padding: 2px;
   background: linear-gradient(90deg, rgba(96, 165, 250, 0.9), rgba(34, 197, 94, 0.85), rgba(236, 72, 153, 0.8));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
+ mask: linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
   mask-composite: exclude;
   opacity: 0;
   pointer-events: none;
