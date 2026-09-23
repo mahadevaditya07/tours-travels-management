@@ -1,8 +1,15 @@
 const User = require('../models/User');
+const Tour = require('../models/Tour');
+const { safeUser } = require('./authController');
 
 exports.getProfile = async (req, res) => {
-	const user = await User.findById(req.user._id).select('-password');
-	res.json({ success: true, user });
+	try {
+		const u = await User.findById(req.user._id).populate('savedTours').select('-password');
+		if (!u) return res.status(404).json({ success: false, message: 'User not found.' });
+		res.json({ success: true, user: safeUser(u) });
+	} catch (e) {
+		res.status(500).json({ success: false, message: e.message });
+	}
 };
 
 exports.updateProfile = async (req, res) => {
@@ -22,21 +29,65 @@ exports.updateProfile = async (req, res) => {
 		const updates = { name, phone, avatar };
 		if (email) updates.email = email.toLowerCase();
 
-		const u = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true }).select('-password');
-		res.json({ success: true, message: 'Profile updated successfully.', user: u });
+		const u = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true }).populate('savedTours').select('-password');
+		res.json({ success: true, message: 'Profile updated successfully.', user: safeUser(u) });
 	} catch (e) {
 		res.status(400).json({ success: false, message: e.message });
 	}
 };
 
-// Increment savedExperience by 1
+// Toggle or save experience in user's savedTours
 exports.saveExperience = async (req, res) => {
 	try {
+		const { tourId, tour } = req.body;
 		const u = await User.findById(req.user._id);
 		if (!u) return res.status(404).json({ success: false, message: 'User not found.' });
-		u.savedExperience = (u.savedExperience || 0) + 1;
+
+		if (!Array.isArray(u.savedTours)) u.savedTours = [];
+
+		const targetId = tourId || (tour ? (tour._id || tour.id) : null);
+		let targetTour = null;
+
+		if (targetId) {
+			targetTour = await Tour.findById(targetId).catch(() => null);
+			if (!targetTour) {
+				targetTour = await Tour.findOne({ id: targetId });
+			}
+		}
+
+		if (!targetTour && tour && tour.title) {
+			targetTour = await Tour.findOne({ title: tour.title });
+			if (!targetTour) {
+				targetTour = await Tour.create({
+					id: tour.id || undefined,
+					title: tour.title,
+					destination: tour.destination || 'India',
+					description: tour.description || '',
+					price: tour.price || 0,
+					category: tour.category || 'Tour',
+					image: tour.image || '',
+					duration: tour.duration || '',
+					vehicle: tour.vehicle || ''
+				});
+			}
+		}
+
+		if (targetTour) {
+			const existsIdx = u.savedTours.findIndex(id => id.toString() === targetTour._id.toString());
+			if (existsIdx > -1) {
+				u.savedTours.splice(existsIdx, 1);
+			} else {
+				u.savedTours.push(targetTour._id);
+			}
+		} else {
+			u.savedExperience = (u.savedExperience || 0) + 1;
+		}
+
+		u.savedExperience = u.savedTours.length || u.savedExperience || 0;
 		await u.save();
-		res.json({ success: true, user: u });
+
+		const updatedUser = await User.findById(u._id).populate('savedTours').select('-password');
+		res.json({ success: true, user: safeUser(updatedUser) });
 	} catch (e) {
 		res.status(400).json({ success: false, message: e.message });
 	}

@@ -10,6 +10,7 @@ const s = new mongoose.Schema({
 	rating: { type: Number, default: 0 },
 	ratingCount: { type: Number, default: 0 },
 	savedExperience: { type: Number, default: 0 },
+	savedTours: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tour' }],
 	// Verification / password reset fields
 	isVerified: { type: Boolean, default: false },
 	verificationToken: String,

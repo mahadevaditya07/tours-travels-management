@@ -49,21 +49,51 @@ export default function TourDetails() {
     <div className="container detail-grid"><main>
       <div className="card detail-panel"><div className="detail-stats"><div><span>Departure</span><strong>Hubli, KA</strong></div><div><span>Duration</span><strong>{tour.duration || "N/A"}</strong></div><div><span>Vehicle</span><strong>🚗 {tour.vehicle || "Standard"}</strong></div><div><span>Rating</span><strong>★ {tour.rating || "4.5"}</strong></div><div><span>Starting from</span><strong>₹{priceVal.toLocaleString("en-IN")}</strong></div></div><h2>About this journey</h2><p className="muted">{tour.description} Departs from Hubli with thoughtfully selected highlights.{tour.vehicle ? ` Assigned vehicle: ${tour.vehicle}.` : ''}</p>{places.length > 0 && (<><h2>Places covered</h2><div className="chips">{places.map(p=><span key={p}>{p}</span>)}</div></>)}<div className="included-grid"><div><h3>Included</h3>{included.map(x=><p key={x}>✓ {x}</p>)}</div><div><h3>Not included</h3>{excluded.map(x=><p key={x}>× {x}</p>)}</div></div><h2>Available dates</h2><div className="date-list">{dates.map(d=><span key={typeof d === "string" ? d : d?.toString()}>{new Date(d).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})}</span>)}</div></div>
     </main><aside className="booking-card card"><span className="eyebrow">Plan this experience</span><h2>₹{priceVal.toLocaleString("en-IN")} <small>/ person</small></h2>{tour.vehicle && <div style={{ fontSize: '0.9rem', color: '#62e6d0', marginBottom: 8, fontWeight: 500 }}>🚗 {tour.vehicle} included</div>}<p className="muted">Build a route around this tour or continue directly to booking.</p><Link className="btn btn-primary full" to="/booking" state={{tour}}>Book now →</Link><Link className="btn btn-secondary full" to="/map-planner" state={{tour}}>Plan route</Link>
-      <AuthSave />
+      <AuthSave tour={tour} />
       <div className="secure-note">● Estimated pricing · final price confirmed by backend</div></aside></div>
   </div>;
 }
 
-function AuthSave(){
-  const { saveExperience } = useAuth();
+function AuthSave({ tour }){
+  const { user, saveExperience } = useAuth();
   const toast = useToast();
+  const [saving, setSaving] = useState(false);
+
+  const isSaved = Array.isArray(user?.savedTours) && user.savedTours.some(
+    s => (s._id === tour._id || s.id === tour.id || s === tour._id || s === tour.id || (s.title && s.title === tour.title))
+  );
+
   const onSave = async () => {
+    if (!user) {
+      toast?.showToast('Please log in to save experiences.', { type: 'error' });
+      return;
+    }
     try {
-      await saveExperience();
-      toast?.showToast('Saved experience', { type: 'success' });
+      setSaving(true);
+      const res = await saveExperience(tour._id || tour.id, tour);
+      const nowSaved = Array.isArray(res?.user?.savedTours) && res.user.savedTours.some(
+        s => (s._id === tour._id || s.id === tour.id || s === tour._id || s === tour.id || (s.title && s.title === tour.title))
+      );
+      if (nowSaved) {
+        toast?.showToast('Saved experience to your collection', { type: 'success' });
+      } else {
+        toast?.showToast('Removed experience from saved', { type: 'info' });
+      }
     } catch (e) {
       toast?.showToast(e.message || 'Save failed.', { type: 'error' });
+    } finally {
+      setSaving(false);
     }
   };
-  return <button className="btn btn-outline full" onClick={onSave} style={{marginTop:12}}>Save experience</button>;
+
+  return (
+    <button 
+      className={`btn ${isSaved ? 'btn-primary' : 'btn-outline'} full`} 
+      onClick={onSave} 
+      disabled={saving}
+      style={{marginTop:12}}
+    >
+      {saving ? 'Updating...' : (isSaved ? '♥ Saved in collection' : '♡ Save experience')}
+    </button>
+  );
 }

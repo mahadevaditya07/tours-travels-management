@@ -241,8 +241,8 @@ export const updateProfile = async (data) => {
   return response.data;
 };
 
-export const saveExperience = async () => {
-  const response = await api.post('/users/profile/save');
+export const saveExperience = async (tourId, tour) => {
+  const response = await api.post('/users/profile/save', { tourId, tour });
   return response.data;
 };
 

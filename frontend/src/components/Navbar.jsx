@@ -61,6 +61,7 @@ export default function Navbar() {
               ) : (
                 <>
                   <NavLink to="/dashboard" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Dashboard</NavLink>
+                  <NavLink to="/saved-experiences" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Saved</NavLink>
                   <NavLink to="/my-bookings" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Bookings</NavLink>
                   <NavLink to="/profile" onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>Profile</NavLink>
                 </>

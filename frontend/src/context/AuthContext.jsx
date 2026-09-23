@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { loginUser, registerUser, updateProfile as apiUpdateProfile, saveExperience as apiSaveExperience, addRating as apiAddRating } from "../services/api";
+import { loginUser, registerUser, getProfile, updateProfile as apiUpdateProfile, saveExperience as apiSaveExperience, addRating as apiAddRating } from "../services/api";
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = "tours_user";
@@ -13,6 +13,17 @@ export function AuthProvider({ children }) {
     } catch { return null; }
   });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    if (token) {
+      getProfile().then(res => {
+        if (res?.user) {
+          setUser(res.user);
+        }
+      }).catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -65,10 +76,10 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const saveExperience = async () => {
+  const saveExperience = async (tourId, tour) => {
     setLoading(true);
     try {
-      const res = await apiSaveExperience();
+      const res = await apiSaveExperience(tourId, tour);
       if (res?.user) {
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify(res.user));
         setUser(res.user);

@@ -6,7 +6,31 @@ const User = require('../models/User');
 const token = id => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
 
 // Helper to shape user object
-const safeUser = u => ({ id: u._id, name: u.name, email: u.email, phone: u.phone, role: u.role, rating: u.rating, savedExperience: u.savedExperience, isVerified: u.isVerified });
+const safeUser = u => {
+	const obj = u && u.toObject ? u.toObject() : (u || {});
+	const savedTours = Array.isArray(obj.savedTours) ? obj.savedTours.map(t => {
+		if (t && typeof t === 'object') {
+			const tObj = t.toObject ? t.toObject() : t;
+			if (!tObj.id && tObj._id) tObj.id = String(tObj._id);
+			return tObj;
+		}
+		return t;
+	}) : [];
+	return {
+		id: obj._id || obj.id,
+		_id: obj._id || obj.id,
+		name: obj.name,
+		email: obj.email,
+		phone: obj.phone,
+		role: obj.role,
+		avatar: obj.avatar,
+		rating: obj.rating,
+		savedExperience: savedTours.length || obj.savedExperience || 0,
+		savedTours: savedTours,
+		isVerified: obj.isVerified
+	};
+};
+exports.safeUser = safeUser;
 
 exports.register = async (req, res) => {
 	try {
@@ -74,7 +98,7 @@ exports.verifyAccount = async (req, res) => {
 exports.login = async (req, res) => {
 	try {
 		const { email, password } = req.body;
-		const u = await User.findOne({ email: email?.toLowerCase() });
+		const u = await User.findOne({ email: email?.toLowerCase() }).populate('savedTours');
 		if (!u || !(await bcrypt.compare(password || '', u.password))) return res.status(401).json({ success: false, message: 'Invalid email or password.' });
 		// Previously required verification; now allow login without verification.
 		res.json({ success: true, message: 'Login successful.', token: token(u._id), user: safeUser(u) });
