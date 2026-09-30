@@ -218,6 +218,14 @@ export const resolveCoordinates = (place) => {
   return null;
 };
 
+export const HUBLI_COORDS = [15.3647, 75.124];
+export const HUBLI_LOCATION = {
+  id: "hubli-final",
+  name: "Hubli",
+  coords: HUBLI_COORDS,
+  displayName: "Hubli, Karnataka, India",
+};
+
 /*
  * Create the ordered list of points:
  *
@@ -225,9 +233,9 @@ export const resolveCoordinates = (place) => {
  * ↓
  * Stop 1
  * ↓
- * Stop 2
- * ↓
  * Destination
+ * ↓
+ * Hubli (Final stop)
  */
 export const buildRoutePoints = (
   start,
@@ -237,21 +245,40 @@ export const buildRoutePoints = (
   const startCoords = resolveCoordinates(start);
   const destinationCoords = resolveCoordinates(destination);
 
-  if (!startCoords || !destinationCoords) {
+  if (!startCoords && !destinationCoords) {
     return [];
   }
 
-  const route = [startCoords];
+  const route = [];
+
+  if (startCoords) {
+    route.push(startCoords);
+  }
 
   stops.forEach((stop) => {
     const coords = resolveCoordinates(stop);
-
     if (coords) {
       route.push(coords);
     }
   });
 
-  route.push(destinationCoords);
+  if (destinationCoords) {
+    route.push(destinationCoords);
+  }
+
+  if (route.length === 0) {
+    return [];
+  }
+
+  const lastPoint = route[route.length - 1];
+  const isLastHubli =
+    lastPoint &&
+    Math.abs(lastPoint[0] - HUBLI_COORDS[0]) < 0.01 &&
+    Math.abs(lastPoint[1] - HUBLI_COORDS[1]) < 0.01;
+
+  if (!isLastHubli) {
+    route.push(HUBLI_COORDS);
+  }
 
   return route;
 };

@@ -9,11 +9,11 @@ import {
 } from "../src/pages/mapPlannerUtils.js";
 
 
-test("known coordinate objects are used to build route points", () => {
+test("known coordinate objects are used to build route points with Hubli final stop", () => {
   const route = buildRoutePoints(
     {
-      name: "Hubli",
-      coords: [15.3647, 75.124],
+      name: "Dharwad",
+      coords: [15.4589, 75.0078],
     },
     {
       name: "Gokarna",
@@ -33,7 +33,7 @@ test("known coordinate objects are used to build route points", () => {
 
   assert.deepEqual(
     route[0],
-    [15.3647, 75.124]
+    [15.4589, 75.0078]
   );
 
   assert.deepEqual(
@@ -51,9 +51,14 @@ test("known coordinate objects are used to build route points", () => {
     [14.5479, 74.3188]
   );
 
+  assert.deepEqual(
+    route[4],
+    [15.3647, 75.124]
+  );
+
   assert.equal(
     route.length,
-    4
+    5
   );
 });
 

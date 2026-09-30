@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Booking = require('../models/Booking');
 const Vehicle = require('../models/Vehicle');
+const DayCharge = require('../models/DayCharge');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 const { sendCancellationNotification } = require('../controllers/bookingController');
 const mailer = require('../utils/mailer');
@@ -13,10 +14,11 @@ router.use(adminOnly);
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const [users, bookings, vehicles] = await Promise.all([
+    const [users, bookings, vehicles, dayCharges] = await Promise.all([
       User.find().select('-password').sort({ createdAt: -1 }),
       Booking.find().sort({ createdAt: -1 }).limit(50),
       Vehicle.find().sort({ costPerKm: 1 }),
+      DayCharge.find().sort({ days: 1 }),
     ]);
 
     const summary = {
@@ -34,6 +36,7 @@ router.get('/dashboard', async (req, res) => {
       users,
       bookings,
       vehicles,
+      dayCharges,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -106,6 +109,90 @@ router.put('/pricing/:vehicleId', async (req, res) => {
     res.json({ success: true, message: 'Vehicle price updated.', vehicle });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+// Day Charge Admin routes
+router.get('/day-charges', async (req, res) => {
+  try {
+    const charges = await DayCharge.find().sort({ days: 1 });
+    res.json({ success: true, dayCharges: charges });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/day-charges', async (req, res) => {
+  try {
+    const { days, charge, description } = req.body;
+    const numDays = Number(days);
+    const numCharge = Number(charge);
+    if (!Number.isFinite(numDays) || numDays <= 0 || !Number.isFinite(numCharge) || numCharge < 0) {
+      return res.status(400).json({ success: false, message: 'Days and charge must be valid positive numbers.' });
+    }
+
+    const nights = Math.max(0, numDays - 1);
+    const desc = description || `${numDays} Day${numDays > 1 ? 's' : ''} / ${nights} Night${nights !== 1 ? 's' : ''}`;
+
+    const newCharge = await DayCharge.create({
+      days: numDays,
+      nights,
+      charge: numCharge,
+      description: desc,
+    });
+
+    res.status(201).json({ success: true, message: 'Day charge added.', dayCharge: newCharge });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+router.put('/day-charges/:id', async (req, res) => {
+  try {
+    const { charge, days, description } = req.body;
+    const dayCharge = await DayCharge.findById(req.params.id);
+    if (!dayCharge) {
+      return res.status(404).json({ success: false, message: 'Day charge setting not found.' });
+    }
+
+    if (charge !== undefined) {
+      const numCharge = Number(charge);
+      if (!Number.isFinite(numCharge) || numCharge < 0) {
+        return res.status(400).json({ success: false, message: 'Charge must be a valid non-negative number.' });
+      }
+      dayCharge.charge = numCharge;
+    }
+
+    if (days !== undefined) {
+      const numDays = Number(days);
+      if (Number.isFinite(numDays) && numDays > 0) {
+        dayCharge.days = numDays;
+        dayCharge.nights = Math.max(0, numDays - 1);
+      }
+    }
+
+    if (description) {
+      dayCharge.description = description;
+    } else if (days !== undefined) {
+      dayCharge.description = `${dayCharge.days} Day${dayCharge.days > 1 ? 's' : ''} / ${dayCharge.nights} Night${dayCharge.nights !== 1 ? 's' : ''}`;
+    }
+
+    await dayCharge.save();
+    res.json({ success: true, message: 'Day charge updated.', dayCharge });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+router.delete('/day-charges/:id', async (req, res) => {
+  try {
+    const dayCharge = await DayCharge.findByIdAndDelete(req.params.id);
+    if (!dayCharge) {
+      return res.status(404).json({ success: false, message: 'Day charge setting not found.' });
+    }
+    res.json({ success: true, message: 'Day charge deleted.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

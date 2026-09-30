@@ -16,7 +16,7 @@ import {
   attractions,
   vehicles as mockVehicles,
 } from "../data/mockData";
-import { getVehicles } from "../services/api";
+import { getVehicles, getDayCharges } from "../services/api";
 
 import {
   buildLocationSearchQueries,
@@ -25,6 +25,8 @@ import {
   getRouteDistance,
   normalizeStop,
   pickBestGeocodeMatch,
+  HUBLI_COORDS,
+  HUBLI_LOCATION,
 } from "./mapPlannerUtils";
 
 import "./MapPlanner.css";
@@ -379,11 +381,19 @@ export default function MapPlanner() {
   const [vehicleList, setVehicleList] =
     useState(mockVehicles);
 
+  const [days, setDays] = useState(2);
+  const [dayCharges, setDayCharges] = useState([]);
+
   useEffect(() => {
     let isMounted = true;
     getVehicles().then((data) => {
       if (isMounted && data && data.length > 0) {
         setVehicleList(data);
+      }
+    });
+    getDayCharges().then((data) => {
+      if (isMounted && Array.isArray(data) && data.length > 0) {
+        setDayCharges(data);
       }
     });
     return () => {
@@ -498,6 +508,17 @@ export default function MapPlanner() {
     ? Math.round(totalDistance * vehicle.costPerKm)
     : 0;
 
+  const nights = Math.max(0, days - 1);
+
+  const additionalCharge = useMemo(() => {
+    const match = dayCharges.find((dc) => Number(dc.days) === Number(days));
+    if (match) return match.charge;
+    return Math.max(0, (days - 1) * 1000);
+  }, [dayCharges, days]);
+
+  const travelCost = vehicleFare;
+  const totalTourPrice = travelCost + additionalCharge;
+
   // Fuel estimation (legacy display) - kept for informational purposes
   const fuelCost = totalDistance
     ? Math.ceil(totalDistance / vehicle.mileage) * 100
@@ -532,6 +553,24 @@ export default function MapPlanner() {
   const plannerDestination =
     destination?.name ||
     "Destination";
+
+  const routeSequence = useMemo(() => {
+    const points = [];
+    if (start?.name) points.push(start.name);
+    stops.forEach((s) => points.push(s.name));
+    if (destination?.name) points.push(destination.name);
+
+    if (points.length === 0) return ["Start", "Destination", "Hubli"];
+
+    const lastPoint = points[points.length - 1];
+    if (lastPoint.toLowerCase() !== "hubli") {
+      points.push("Hubli");
+    }
+
+    return points;
+  }, [start, destination, stops]);
+
+  const fullRouteText = routeSequence.join(" → ");
 
 
   // ------------------------------------------------
@@ -1209,10 +1248,27 @@ export default function MapPlanner() {
                           value={v.id || v._id}
                         >
                           {v.name} ·{" "}
-                          {v.capacity} seats
+                          {v.capacity} seats (₹{v.costPerKm}/km)
                         </option>
                       )
                     )}
+                  </select>
+                </div>
+
+                <div className="field">
+                  <label>
+                    Tour Duration
+                  </label>
+
+                  <select
+                    value={days}
+                    onChange={(e) => setDays(Number(e.target.value))}
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14].map((d) => (
+                      <option key={d} value={d}>
+                        {d} Day{d > 1 ? "s" : ""} / {d - 1} Night{d - 1 !== 1 ? "s" : ""}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -1330,110 +1386,44 @@ export default function MapPlanner() {
             className="planner-summary"
             style={{
               display: "grid",
-              gap: 10,
+              gap: 8,
+              fontSize: "0.9rem",
             }}
           >
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "1fr 1fr",
-                gap: 8,
-              }}
-            >
-
-              <div>
-                <span>
-                  Route
-                </span>
-
-                <strong>
-                  {plannerStart} →{" "}
-                  {plannerDestination}
-                </strong>
-              </div>
-
-              <div>
-                <span>
-                  Stops
-                </span>
-
-                <strong>
-                  {stops.length}
-                </strong>
-              </div>
-
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Tour Route:</span>
+              <strong style={{ textAlign: "right" }}>{fullRouteText}</strong>
             </div>
 
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Duration:</span>
+              <strong>{days} Day{days > 1 ? "s" : ""} / {nights} Night{nights !== 1 ? "s" : ""}</strong>
+            </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "1fr 1fr 1fr",
-                gap: 8,
-              }}
-            >
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Total Distance:</span>
+              <strong>{Math.round(totalDistance)} km</strong>
+            </div>
 
-              <div>
-                <span>
-                  Distance
-                </span>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Vehicle:</span>
+              <strong>{vehicle.name} (₹{vehicle.costPerKm}/km)</strong>
+            </div>
 
-                <strong>
-                  {Math.round(
-                    totalDistance
-                  )}{" "}
-                  km
-                </strong>
-              </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Travel Cost:</span>
+              <strong>₹{travelCost.toLocaleString("en-IN")}</strong>
+            </div>
 
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Additional Stay Charge:</span>
+              <strong>₹{additionalCharge.toLocaleString("en-IN")}</strong>
+            </div>
 
-              <div>
-                <span>
-                  Time
-                </span>
-
-                <strong>
-                  {selectedRoute
-                    ? Math.max(
-                        1,
-                        Math.round(
-                          selectedRoute.duration /
-                            3600
-                        )
-                      )
-                    : Math.max(
-                        1,
-                        Math.round(
-                          totalDistance /
-                            50
-                        )
-                      )}{" "}
-                  hrs
-                </strong>
-              </div>
-
-
-              <div>
-                <span>
-                  Fuel
-                </span>
-
-                <strong>
-                  ₹
-                  {fuelCost.toLocaleString(
-                    "en-IN"
-                  )}
-                </strong>
-              </div>
-
-              <div>
-                <span>Vehicle fare</span>
-                <strong>₹{vehicleFare.toLocaleString('en-IN')}</strong>
-              </div>
-
+            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: 8, marginTop: 4, fontSize: "1.05rem", color: "#10b981" }}>
+              <span>Total Tour Price:</span>
+              <strong>₹{totalTourPrice.toLocaleString("en-IN")}</strong>
             </div>
 
           </div>
@@ -1465,18 +1455,33 @@ export default function MapPlanner() {
                 planner: {
                   start: plannerStart,
 
-                  destination: plannerDestination,
+                  destination: plannerDestination.toLowerCase() === "hubli" ? "Hubli" : `${plannerDestination} → Hubli`,
 
                   stops,
+
+                  fullRoute: fullRouteText,
+
+                  days,
+
+                  nights,
 
                   members,
 
                   vehicleId,
 
+                  vehicleName: vehicle.name,
+
+                  vehicleRate: vehicle.costPerKm,
+
                   distance: Math.round(totalDistance),
 
-                  // pass calculated vehicle fare so booking uses per-km pricing
-                  vehicleCost: vehicleFare,
+                  travelCost,
+
+                  additionalCharges: additionalCharge,
+
+                  totalPrice: totalTourPrice,
+
+                  vehicleCost: travelCost,
 
                   fuelCost,
 
@@ -1599,6 +1604,20 @@ export default function MapPlanner() {
                 </Marker>
               )}
 
+              {/* ====================================
+                  FINAL STOP (HUBLI) MARKER
+              ===================================== */}
+
+              {destination?.name?.toLowerCase() !== "hubli" && start?.name?.toLowerCase() !== "hubli" && (
+                <Marker position={HUBLI_COORDS}>
+                  <Popup>
+                    <strong>Final Stop</strong>
+                    <br />
+                    Hubli
+                  </Popup>
+                </Marker>
+              )}
+
 
               {/* ====================================
                   ROUTE ALTERNATIVES
@@ -1683,16 +1702,7 @@ export default function MapPlanner() {
 
               ●{" "}
 
-              {[
-                plannerStart,
-
-                ...stops.map(
-                  (stop) =>
-                    stop.name
-                ),
-
-                plannerDestination,
-              ].join("  →  ")}
+              {fullRouteText}
 
               {selectedRoute && (
                 <>

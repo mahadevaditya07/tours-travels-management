@@ -210,6 +210,33 @@ export const updateVehiclePricing = async (vehicleId, costPerKm) => {
   return response.data;
 };
 
+// ==================== DAY CHARGES ====================
+
+export const getDayCharges = async () => {
+  try {
+    const response = await api.get('/day-charges');
+    return response.data?.dayCharges || [];
+  } catch (err) {
+    console.error('Failed to fetch day charges:', err);
+    return [];
+  }
+};
+
+export const createDayCharge = async (days, charge, description) => {
+  const response = await api.post('/admin/day-charges', { days, charge, description });
+  return response.data;
+};
+
+export const updateDayCharge = async (id, data) => {
+  const response = await api.put(`/admin/day-charges/${id}`, data);
+  return response.data;
+};
+
+export const deleteDayCharge = async (id) => {
+  const response = await api.delete(`/admin/day-charges/${id}`);
+  return response.data;
+};
+
 export const cancelBooking = async (id) => {
   const response = await api.put(`/bookings/${id}/cancel`);
   const booking = response.data?.booking || response.data;

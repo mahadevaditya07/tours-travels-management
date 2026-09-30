@@ -138,6 +138,12 @@ exports.createBooking = async (req, res) => {
     const confirmationToken = crypto.randomBytes(20).toString('hex');
     const confirmationExpires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
 
+    const numDays = Number(b.days) || 1;
+    const numNights = b.nights !== undefined ? Number(b.nights) : Math.max(0, numDays - 1);
+    const vehicleRate = Number(b.vehicleRate) || (vehicleDoc ? vehicleDoc.costPerKm : 0);
+    const travelCost = b.travelCost !== undefined ? Number(b.travelCost) : Math.round((Number(b.distance) || 0) * vehicleRate);
+    const additionalCharges = b.additionalCharges !== undefined ? Number(b.additionalCharges) : 0;
+
     const bookingData = {
       user: req.user._id,
       tour: t?._id,
@@ -149,11 +155,16 @@ exports.createBooking = async (req, res) => {
       destination: b.destination,
       stops: b.stops || [],
       travelDate: b.travelDate,
+      days: numDays,
+      nights: numNights,
       members: b.members,
       vehicle: b.vehicle,
+      vehicleRate,
       distance: b.distance || 0,
+      travelCost,
       basePrice: (b.basePrice !== undefined ? b.basePrice : (t?.price || 0)),
-      vehicleCost: Math.max(0, Number(b.totalPrice) - (t?.price || 0)),
+      vehicleCost: travelCost || Math.max(0, Number(b.totalPrice) - (t?.price || 0)),
+      additionalCharges,
       totalPrice: Number(b.totalPrice),
       status: 'Pending',
       confirmationToken,

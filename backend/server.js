@@ -10,6 +10,7 @@ const tourRoutes = require("./routes/tourRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const userRoutes = require("./routes/userRoutes");
 const vehicleRoutes = require("./routes/vehicleRoutes");
+const dayChargeRoutes = require("./routes/dayChargeRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
@@ -39,12 +40,14 @@ app.use("/api/tours", tourRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/vehicles", vehicleRoutes);
+app.use("/api/day-charges", dayChargeRoutes);
 app.use("/api/admin", adminRoutes);
 
 // Seed vehicle data if not present
 const Vehicle = require('./models/Vehicle');
 const User = require('./models/User');
 const Tour = require('./models/Tour');
+const DayCharge = require('./models/DayCharge');
 
 const seedAdminAccount = async () => {
   try {
@@ -65,6 +68,29 @@ const seedAdminAccount = async () => {
     }
   } catch (e) {
     console.error('Admin seed failed', e.message || e);
+  }
+};
+
+const seedDayCharges = async () => {
+  try {
+    const defaultCharges = [
+      { days: 1, nights: 0, charge: 0, description: '1 Day / 0 Nights' },
+      { days: 2, nights: 1, charge: 1000, description: '2 Days / 1 Night' },
+      { days: 3, nights: 2, charge: 2000, description: '3 Days / 2 Nights' },
+      { days: 4, nights: 3, charge: 3000, description: '4 Days / 3 Nights' },
+      { days: 5, nights: 4, charge: 4000, description: '5 Days / 4 Nights' },
+      { days: 6, nights: 5, charge: 5000, description: '6 Days / 5 Nights' },
+      { days: 7, nights: 6, charge: 6000, description: '7 Days / 6 Nights' },
+    ];
+    for (const item of defaultCharges) {
+      await DayCharge.updateOne(
+        { days: item.days },
+        { $setOnInsert: item },
+        { upsert: true }
+      );
+    }
+  } catch (e) {
+    console.error('Day charges seed failed', e.message || e);
   }
 };
 
@@ -125,6 +151,7 @@ const seedTours = async () => {
 seedVehicles();
 seedTours();
 seedAdminAccount();
+seedDayCharges();
 
 app.use((req, res) => {
   res.status(404).json({

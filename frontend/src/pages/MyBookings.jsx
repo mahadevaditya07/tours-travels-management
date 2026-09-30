@@ -142,7 +142,16 @@ export default function MyBookings() {
 
                 <div className="modal-field">
                   <label>Vehicle</label>
-                  <strong>{selectedBooking.vehicle}</strong>
+                  <strong>{selectedBooking.vehicle} {selectedBooking.vehicleRate ? `(₹${selectedBooking.vehicleRate}/km)` : ''}</strong>
+                </div>
+
+                <div className="modal-field">
+                  <label>Duration</label>
+                  <strong>
+                    {selectedBooking.days
+                      ? `${selectedBooking.days} Day${selectedBooking.days > 1 ? 's' : ''} / ${selectedBooking.nights !== undefined ? selectedBooking.nights : Math.max(0, selectedBooking.days - 1)} Night${(selectedBooking.nights !== undefined ? selectedBooking.nights : Math.max(0, selectedBooking.days - 1)) !== 1 ? 's' : ''}`
+                      : 'Standard'}
+                  </strong>
                 </div>
 
                 <div className="modal-field">
@@ -169,25 +178,25 @@ export default function MyBookings() {
 
                 <div className="modal-divider" />
 
-                <div className="modal-field">
-                  <label>Base Tour Cost</label>
-                  <strong>₹{Number(selectedBooking.basePrice || 0).toLocaleString('en-IN')}</strong>
-                </div>
-
-                <div className="modal-field">
-                  <label>Vehicle Cost</label>
-                  <strong>₹{Number(selectedBooking.vehicleCost || 0).toLocaleString('en-IN')}</strong>
-                </div>
-
-                {Boolean(selectedBooking.additionalCharges || selectedBooking.additional) && (
+                {Number(selectedBooking.basePrice || 0) > 0 && (
                   <div className="modal-field">
-                    <label>Additional Charges</label>
-                    <strong>₹{Number(selectedBooking.additionalCharges || selectedBooking.additional || 0).toLocaleString('en-IN')}</strong>
+                    <label>Base Package Cost</label>
+                    <strong>₹{Number(selectedBooking.basePrice || 0).toLocaleString('en-IN')}</strong>
                   </div>
                 )}
 
+                <div className="modal-field">
+                  <label>Travel Cost</label>
+                  <strong>₹{Number(selectedBooking.travelCost || selectedBooking.vehicleCost || 0).toLocaleString('en-IN')}</strong>
+                </div>
+
+                <div className="modal-field">
+                  <label>Additional Stay/Day Charge</label>
+                  <strong>₹{Number(selectedBooking.additionalCharges || selectedBooking.additional || 0).toLocaleString('en-IN')}</strong>
+                </div>
+
                 <div className="modal-field modal-full">
-                  <label>Total Price</label>
+                  <label>Total Tour Price</label>
                   <strong style={{ fontSize: '1.2rem', color: '#23c4a8' }}>
                     ₹{Number(selectedBooking.totalPrice !== undefined ? selectedBooking.totalPrice : selectedBooking.total || 0).toLocaleString('en-IN')}
                   </strong>
