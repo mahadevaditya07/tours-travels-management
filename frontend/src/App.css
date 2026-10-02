@@ -2,28 +2,32 @@
 main { min-height:calc(100vh - 80px); }
 .page-title-wrap { padding:120px 0 40px; }
 .page-title-wrap .display-title { max-width:800px; }
-.notice { padding:13px 15px; border-radius:13px; font-size:.88rem; }
+.notice { padding:13px 15px; border-radius:13px; font-size:var(--text-sm); }
 .notice.error { color:#ffb2bb; background:rgba(255,107,122,.09); border:1px solid rgba(255,107,122,.18); }
 .notice.success { color:#a9f4e8; background:rgba(35,196,168,.09); border:1px solid rgba(35,196,168,.18); }
 
 /* Hero styles moved to pages/Home.css */
 
 /* Destination cards moved to pages/Home.css */
-.tour-card { overflow:hidden; transition:.3s; }
+.tour-card { overflow:hidden; transition:.3s; display:flex; flex-direction:column; }
 .tour-card:hover { transform:translateY(-5px); }
 .tour-image-wrap { height:250px; position:relative; overflow:hidden; }
 .tour-image-wrap img { width:100%; height:100%; object-fit:cover; transition:.5s; }
 .tour-card:hover .tour-image-wrap img { transform:scale(1.04); }
-.tour-category,.tour-rating { position:absolute; top:14px; padding:7px 10px; border-radius:10px; background:rgba(4,12,21,.76); backdrop-filter:blur(8px); font-size:.72rem; }
+.tour-category,.tour-rating { position:absolute; top:14px; padding:7px 10px; border-radius:10px; background:rgba(4,12,21,.76); backdrop-filter:blur(8px); font-size:var(--text-xs); }
 .tour-category { left:14px; color:var(--primary-2); }
 .tour-rating { right:14px; color:#ffd18c; }
-.tour-content { padding:20px; }
-.tour-location { color:var(--primary-2); font-size:.76rem; margin:0 0 5px; }
-.tour-content h3 { margin:0; font-size:1.25rem; }
-.tour-desc { font-size:.84rem; min-height:48px; }
+.tour-content { padding:20px; display:flex; flex-direction:column; flex:1; }
+.tour-location { color:var(--primary-2); font-size:var(--text-xs); margin:0 0 5px; }
+.tour-content h3 { margin:0; font-size:var(--text-xl); }
+.tour-desc { font-size:var(--text-sm); min-height:48px; }
 .tour-meta { display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid var(--border); }
 .tour-meta strong { color:var(--primary-2); font-size:1.1rem; }
-.tour-btn { width:100%; }
+.tour-vehicle { margin: 0.5rem 0 0.8rem; display:flex; align-items:center; gap:6px; color:var(--primary-2); font-size:var(--text-sm); font-weight:600; }
+.tour-btn { width:100%; margin-top:auto; color:#04110f; background:linear-gradient(135deg,var(--primary-2),var(--primary)); border:1px solid rgba(98,230,208,.32); }
+.tour-btn:hover { transform:translateY(-2px); }
+.tour-admin-actions { display:flex; gap:8px; align-items:center; margin:10px 0 12px; }
+.tour-admin-actions input { width:120px; padding:8px; border-radius:8px; border:1px solid var(--border); background:#0a1726; color:var(--text); }
 
 /* Feature / CTA moved to pages/Home.css */
 
@@ -45,8 +49,10 @@ main { min-height:calc(100vh - 80px); }
 .footer-grid > div { display:grid; align-content:start; gap:10px; }
 .footer-grid .brand { margin-bottom:8px; }
 .footer-grid h4 { margin:0 0 6px; }
-.footer-grid a,.footer-grid span { color:var(--muted); font-size:.82rem; }
-.footer-bottom { border-top:1px solid var(--border); margin-top:45px; padding-top:20px; color:#60748b; font-size:.72rem; }
+.footer-grid a,.footer-grid span { color:var(--muted-strong); font-size:var(--text-sm); }
+.footer-grid a { color:var(--primary-2); text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:4px; }
+.footer-grid a:hover { color:#dffef7; }
+.footer-bottom { border-top:1px solid var(--border); margin-top:45px; padding-top:20px; color:#60748b; font-size:var(--text-xs); }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 950px) {

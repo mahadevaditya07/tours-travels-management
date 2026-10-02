@@ -4,7 +4,8 @@ export default function DestinationCard({ destination }) {
   return (
     <Link
       to={`/tours?search=${encodeURIComponent(destination.name)}`}
-      style={{ textDecoration: 'none', color: 'inherit', display: 'block', cursor: 'pointer' }}
+      className="destination-card-link"
+      aria-label={`View ${destination.name}`}
     >
       <article className="destination-card fade-up">
         <img

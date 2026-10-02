@@ -43,7 +43,13 @@ export default function Navbar() {
 
         <nav className={`nav-links ${open ? "open" : ""}`}>
           {!isAdmin && nav.map(([label, path]) => (
-            <NavLink key={path} to={path} onClick={() => setOpen(false)} className={({isActive}) => isActive ? "active" : ""}>
+            <NavLink
+              key={path}
+              to={path}
+              end={path === "/"}
+              onClick={() => setOpen(false)}
+              className={({isActive}) => isActive ? "active" : ""}
+            >
               {label}
             </NavLink>
           ))}

@@ -32,7 +32,7 @@ export default function Home() {
             <p className="hero-text">Discover curated destinations, build custom routes and manage your complete trip from one intelligent travel workspace.</p>
             <div className="hero-actions">
               <Link className="btn btn-primary" to="/tours">Explore Tours →</Link>
-              <Link className="btn btn-secondary" to="/map-planner">Plan a Trip</Link>
+              <Link className="btn btn-secondary" to="/map-planner">Plan a Trip →</Link>
             </div>
             <div className="hero-trust"><span>4.9/5 traveler rating</span><span>•</span><span>500+ curated experiences</span></div>
           </div>
@@ -46,10 +46,20 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="search-strip">
+      <section className="search-strip" aria-label="Trip search">
         <div className="container planner-search">
-          <div><span className="eyebrow">Start planning</span><h3>Where do you want to go?</h3></div>
-          <Link className="btn btn-primary" to="/tours">Find my journey →</Link>
+          <div className="planner-search-copy">
+            <span className="eyebrow">Start planning</span>
+            <h2 className="planner-search-title">Where do you want to go?</h2>
+          </div>
+
+          <form className="planner-search-form" onSubmit={(event) => event.preventDefault()}>
+            <label className="search-field" htmlFor="trip-destination">
+              <span className="sr-only">Destination</span>
+              <input id="trip-destination" type="text" placeholder="Search destinations, routes or experiences" aria-label="Search destinations" />
+            </label>
+            <Link className="btn btn-secondary planner-search-btn" to="/tours">Find my journey →</Link>
+          </form>
         </div>
       </section>
 

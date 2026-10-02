@@ -53,16 +53,14 @@ export default function TourCard({ tour }) {
           </strong>
         </div>
         {tour.vehicle && (
-          <div style={{ fontSize: '0.82rem', color: '#62e6d0', marginTop: 4, fontWeight: 500 }}>
-            🚗 {tour.vehicle}
-          </div>
+          <div className="tour-vehicle">🚗 {tour.vehicle}</div>
         )}
 
         {isAdmin && (
-          <div style={{ margin: '10px 0 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className="tour-admin-actions">
             {editing ? (
               <>
-                <input type="number" value={inputPrice} onChange={e=>setInputPrice(e.target.value)} style={{width:120,padding:8,borderRadius:8,border:'1px solid var(--border)'}} />
+                <input type="number" value={inputPrice} onChange={e=>setInputPrice(e.target.value)} aria-label="Tour price" />
                 <button className="btn btn-primary" onClick={onSavePrice} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
                 <button className="btn" onClick={()=>{ setEditing(false); setInputPrice(localPrice); }}>Cancel</button>
               </>
@@ -72,7 +70,7 @@ export default function TourCard({ tour }) {
           </div>
         )}
 
-        <Link className="btn btn-secondary tour-btn" to={`/tours/${tour.id || tour._id}`}>View Details →</Link>
+        <Link className="btn tour-btn" to={`/tours/${tour.id || tour._id}`}>View Details →</Link>
       </div>
     </article>
   );
