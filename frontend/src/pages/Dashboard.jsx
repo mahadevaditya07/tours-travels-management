@@ -1,12 +1,21 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { tours, destinations } from "../data/mockData";
+import { getMyBookings } from "../services/api";
 import "./Dashboard.css";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const bookings = JSON.parse(localStorage.getItem("tours_bookings") || "[]");
-  const upcoming = bookings.filter(b => b.status !== "Cancelled").slice(0, 2);
+  const [bookings, setBookings] = useState([]);
+
+  useEffect(() => {
+    getMyBookings()
+      .then(setBookings)
+      .catch(() => setBookings([]));
+  }, []);
+
+  const upcoming = bookings.filter(b => b.status !== "Cancelled" && b.status !== "Completed");
 
   return <div className="dashboard page">
     <div className="container page-title-wrap"><span className="eyebrow">Your travel workspace</span><h1 className="section-title">Good to see you, {user?.name?.split(" ")[0] || "Traveler"}.</h1><p className="muted">Everything you need for your next journey, in one place.</p></div>
