@@ -56,7 +56,7 @@ export default function Home() {
           <form className="planner-search-form" onSubmit={(event) => event.preventDefault()}>
             <label className="search-field" htmlFor="trip-destination">
               <span className="sr-only">Destination</span>
-              <input id="trip-destination" type="text" placeholder="Search destinations, routes or experiences" aria-label="Search destinations" />
+              <h4 id="trip-destination" aria-label="Search destinations">Search destinations, routes or experiences</h4>
             </label>
             <Link className="btn btn-secondary planner-search-btn" to="/tours">Find my journey →</Link>
           </form>
